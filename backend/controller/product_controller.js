@@ -1,9 +1,12 @@
 import Product from '../models/product_entity.js';
-
+import NodeCache from 'node-cache';
+const cache = new NodeCache();
+// const cache = new NodeCache();
 // Add a new product
 export const addProduct = async (req, res) => {
   try {
     const product = new Product(req.body);
+    cache.del('products');
     await product.save();
     res.status(201).json(product);
   } catch (error) {
@@ -24,16 +27,27 @@ export const bulkInsertProducts = async (req, res) => {
 };
 
 
-// Get all products
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({ deleted: false });
+    // Check if the products are already cached
+    const cachedProducts = cache.get('products');
+    if (cachedProducts) {
+      return res.status(200).json(cachedProducts);
+    }
+
+    // Fetch products if not cached
+    const products = await Product.find({ deleted: false })
+      .select('id thumbnail price title')
+      .lean(); // Convert Mongoose documents to plain JavaScript objects
+
+    // Store the products in cache
+    cache.set('products', products);
+
     res.status(200).json(products);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
-
 // Get a single product by ID
 export const getProductById = async (req, res) => {
   try {
@@ -50,6 +64,7 @@ export const getProductById = async (req, res) => {
 // Update a product by ID
 export const updateProduct = async (req, res) => {
   try {
+    cache.del('products');
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -67,6 +82,7 @@ export const updateProduct = async (req, res) => {
 // Soft delete a product by ID
 export const deleteProduct = async (req, res) => {
   try {
+    cache.del('products');
     const product = await Product.findById(req.params.id);
     if (!product || product.deleted) {
       return res.status(404).json({ error: "Product not found" });

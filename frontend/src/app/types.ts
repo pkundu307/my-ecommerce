@@ -12,6 +12,7 @@ export interface UserState {
 
 // src/types/Product.ts
 export interface Product {
+  _id:string;
   id: string;
   title: string;
   description: string;

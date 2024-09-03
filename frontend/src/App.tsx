@@ -6,6 +6,7 @@ import ProductDetail from './components/ProductDetail';
 import { Provider } from 'react-redux';
 import store from './app/store';
 import AdminPanel from './pages/Adminpanel';
+import Cart from './components/Cart';
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/product/:id" element={<ProductDetail/>} />
         <Route path="/adminpanel" element={<AdminPanel />} />
+        <Route path="/cart" element={<Cart />} />
       </Routes>
       <Footer/>
     </Router>

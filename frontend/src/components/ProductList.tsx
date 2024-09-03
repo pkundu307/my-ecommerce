@@ -2,9 +2,51 @@ import React, { useEffect, useState } from "react";
 // import { Link } from 'react-router-dom';
 import { Product } from "../app/types";
 import { Link } from "react-router-dom";
+import { addItemToCart } from "../app/cartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../app/types";
 
 const ProductList: React.FC = () => {
+  const localStorageUser = localStorage.getItem("user");
+  const userFromLocalStorage = localStorageUser
+    ? JSON.parse(localStorageUser).payload
+    : null;
+
+  const user =
+    useSelector((state: RootState) => state.user.user) || userFromLocalStorage;
   const [products, setProducts] = useState<Product[]>([]); // State with type
+  const dispatch = useDispatch();
+
+  const handleAddToCart = async (product: Product) => {
+    // Prepare the cart item
+    const cartItem = {
+      id: product._id,
+      image: product.thumbnail,
+      title: product.title,
+      price: product.price,
+      quantity: 1,
+    };
+
+    // Dispatch the action to add the item to the cart
+    dispatch(addItemToCart(cartItem));
+
+    // Optionally, you can send the request to the backend to persist the cart item
+    try {
+      const response = await fetch('http://localhost:5000/api/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartItem),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add item to cart');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -15,6 +57,8 @@ const ProductList: React.FC = () => {
         }
         const data: Product[] = await response.json(); // Type the data
         setProducts(data);
+        console.log(data,'data');
+        
       } catch (error) {
         console.error("Error:", error);
       }
@@ -33,19 +77,19 @@ const ProductList: React.FC = () => {
         <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
           {products.map((product) => (
             <div key={product.id} className="group relative">
-                <Link to={`product/${product.id}`}>
+                
               <div className="relative m-10 flex w-full max-w-xs flex-col overflow-hidden rounded-lg border border-gray-100 bg-white shadow-md">
                 <a
                   className="relative mx-3 mt-3 flex h-60 overflow-hidden rounded-xl"
                   href="#"
                 >
-                
+                    <Link to={`product/${product._id}`}>
                   <img
                     className="object-cover"
-                    src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8OHx8c25lYWtlcnxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60"
+                    src={product.thumbnail}
                     alt="product image"
                   />
-            
+                     </Link>
                   <span className="absolute top-0 left-0 m-2 rounded-full bg-black px-2 text-center text-sm font-medium text-white">
                     39% OFF
                   </span>
@@ -59,7 +103,7 @@ const ProductList: React.FC = () => {
                   <div className="mt-2 mb-5 flex items-center justify-between">
                     <p>
                       <span className="text-3xl font-bold text-slate-900">
-                        $449
+                       {product.price}
                       </span>
                       <span className="text-sm text-slate-900 line-through">
                         $699
@@ -117,6 +161,7 @@ const ProductList: React.FC = () => {
                     </div>
                   </div>
                   <a
+                     onClick={() => handleAddToCart(product)}
                     href="#"
                     className="flex items-center justify-center rounded-md bg-slate-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
                   >
@@ -134,12 +179,13 @@ const ProductList: React.FC = () => {
                         d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                       />
                     </svg>
+                    
                     Add to cart
                   </a>
                 </div>
                 
               </div>
-              </Link>
+     
             </div>
             
           ))}

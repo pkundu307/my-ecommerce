@@ -69,6 +69,7 @@ const ProductDetail: React.FC = () => {
 
   if (!product) {
     return <div>Product not found</div>;
+    
   }
 
 
