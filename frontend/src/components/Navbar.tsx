@@ -1,11 +1,12 @@
 import  { useState } from "react";
 import profile from "../images/profile.jpg"
 import cart from "../images/cart.jpg"
+import adminDashboard from "../images/admindashboard.jpg"
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { Link } from "react-router-dom";
 import searchIcon from "../images/search.png"
 import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "../app/userSlice";
+import { clearUser, setUser } from "../app/userSlice";
 import { RootState } from "../app/types";
 interface GoogleOAuthResponse {
   credential: string;
@@ -65,7 +66,10 @@ function Navbar() {
       console.error('Error:', error);
     });
   };
-
+  const handleLogout = () => {
+    localStorage.removeItem('user'); 
+    dispatch(clearUser());
+  };
 
   const handleGoogleLoginFailure = (error: Error) => {
     console.error('Login Failed:', error);
@@ -97,10 +101,7 @@ function Navbar() {
             {/* Search Icon Placeholder */}
             <div className="p-2">
               {/* Replace this div with the actual search icon */}
-              <button className="text-gray-500">
-               
-             
-              </button>
+            
             </div>
             
           </div>
@@ -110,7 +111,16 @@ function Navbar() {
   {/* Right Section: Profile and Cart Icons */}
   <div className="flex items-center space-x-4">
     {/* Profile Icon */}
+    <div
+        className="text-white flex items-center cursor-pointer"
+      >
+        <Link to='/adminpanel'>
+        <img src={adminDashboard} alt="Profile" className="rounded-full h-10 w-13" />
+        </Link>
+       
+      </div>
     <div className="relative">
+      
       <div
         className="text-white flex items-center cursor-pointer"
         onClick={toggleDropdown}
@@ -122,22 +132,30 @@ function Navbar() {
       {/* Dropdown Menu */}
       {dropdownOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2">
-          <a
-            href="#"
-            className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-            onClick={openLoginPopup}
-          >
-            Login
-          </a>
+    {user ? null : (
+  <a
+    href="#"
+    className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+    onClick={openLoginPopup}
+  >
+    Login
+  </a>
+)}
+
           <a href="#" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
             Profile
           </a>
           <a href="#" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
             Settings
           </a>
-          <a href="#" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
-            Logout
-          </a>
+          <a
+  href="#"
+  className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+  onClick={handleLogout}
+>
+  Logout
+</a>
+
         </div>
       )}
     </div>

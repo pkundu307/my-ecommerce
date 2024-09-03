@@ -4,6 +4,7 @@ import connectDB from './database/db.js';
 import jwt from 'jsonwebtoken';
 import {User} from './models/user_entity.js';
 import cors from 'cors'
+import productRouter from './routes/productRoutes.js';
 const client = new OAuth2Client();
 const app = express();
 const PORT = 5000; // Ensure this matches the port in app.listen
@@ -15,11 +16,15 @@ connectDB();
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:3000' // Replace with your allowed origin
-  }));
+    origin: 'http://localhost:3000', // or the frontend URL
+    methods: 'GET,POST,PUT,DELETE', // Allowed HTTP methods
+    credentials: true, 
+}));
 app.get('/', (req, res) => {
     res.send('Hello');
 });
+app.use("/api", productRouter);
+
 
 app.post("/google-auth", async (req, res) => {
     const { credential, client_id } = req.body;

@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import ProductDetail from './components/ProductDetail';
 import { Provider } from 'react-redux';
 import store from './app/store';
+import AdminPanel from './pages/Adminpanel';
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/product/:id" element={<ProductDetail/>} />
+        <Route path="/adminpanel" element={<AdminPanel />} />
       </Routes>
       <Footer/>
     </Router>
