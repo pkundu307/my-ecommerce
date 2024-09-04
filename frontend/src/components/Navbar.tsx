@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import profile from "../images/profile.jpg";
 import cart from "../images/cart.jpg";
 import adminDashboard from "../images/admindashboard.jpg";
@@ -14,14 +15,9 @@ interface GoogleOAuthResponse {
 }
 
 function Navbar() {
-  const localStorageUser = localStorage.getItem("user");
-  const userFromLocalStorage = localStorageUser
-    ? JSON.parse(localStorageUser).payload
-    : null;
 
-  const user =
-    useSelector((state: RootState) => state.user.user) || userFromLocalStorage;
-  console.log(localStorage.getItem("user"));
+ 
+ 
 
   const data: number = 0;
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -46,30 +42,40 @@ function Navbar() {
   };
   const dispatch = useDispatch();
 
-  const handleGoogleLoginSuccess = (
+  const handleGoogleLoginSuccess = async (
     credentialResponse: GoogleOAuthResponse
   ) => {
-    const { credential, clientId } = credentialResponse;
-
-    fetch("http://localhost:5000/api/google-auth", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ credential, client_id: clientId }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        localStorage.setItem("user", JSON.stringify(data));
-        dispatch(setUser(data.payload));
-      })
-      .catch((error) => {
-        console.error("Error:", error);
+    const { credential, clientId } = credentialResponse;  
+    try {
+      const response = await axios.post("http://localhost:5000/api/google-auth", {
+        credential,
+        client_id: clientId,
       });
+  
+      const { user, token } = response.data;
+  
+      // Store user information and JWT token separately
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('jwtToken', token);
+  
+      // Dispatch the user data to Redux store
+      dispatch(setUser(user));
+  
+      console.log("Success:", response.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
+
+  const localStorageUser = localStorage.getItem("user");
+const userFromLocalStorage = localStorageUser
+  ? JSON.parse(localStorageUser)
+  : null;
+
+const user = useSelector((state: RootState) => state.user.user) || userFromLocalStorage;
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("jwtToken")
     dispatch(clearUser());
   };
 
@@ -148,6 +154,7 @@ function Navbar() {
                 onClick={toggleDropdown}
               >
                 {user ? (
+                  
                   <img
                     src={user.picture}
                     alt="Profile"

@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { addItemToCart } from "../app/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../app/types";
+import axios from "axios";
 
 const ProductList: React.FC = () => {
   const localStorageUser = localStorage.getItem("user");
@@ -18,36 +19,36 @@ const ProductList: React.FC = () => {
   const dispatch = useDispatch();
 
   const handleAddToCart = async (product: Product) => {
+    
+  
     // Prepare the cart item
     const cartItem = {
-      id: product._id,
-      image: product.thumbnail,
-      title: product.title,
-      price: product.price,
-      quantity: 1,
+      product: product._id, // this refers to the product's ObjectId
+      quantity: 1, // default quantity
+      size: 'M', // example size, customize as needed
+      color: 'Red', // example color, customize as needed
     };
-
-    // Dispatch the action to add the item to the cart
-    dispatch(addItemToCart(cartItem));
-
-    // Optionally, you can send the request to the backend to persist the cart item
+  
+    // Get the JWT token from localStorage
+    const token = localStorage.getItem('jwtToken');
+  
     try {
-      const response = await fetch('http://localhost:5000/api/cart/add', {
-        method: 'POST',
+      // Send the request to the backend to add the item to the cart
+      const response = await axios.post('http://localhost:5000/api/cart/add', cartItem, {
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(cartItem),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to add item to cart');
-      }
+  
+      // Dispatch the action to add the item to the cart in the Redux store
+      dispatch(addItemToCart(response.data));
+  
+      console.log("Product added to cart:", response.data);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to add item to cart:", error);
     }
   };
-
   useEffect(() => {
     const fetchProducts = async () => {
       try {

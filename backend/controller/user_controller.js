@@ -31,9 +31,9 @@ export const googleAuthController = async (req, res) => {
 
         // Generate a JWT token
         const token = jwt.sign({ user }, JWT_SECRET);
-        res.status(200)
-            .cookie('token', token, { httpOnly: true })
-            .json({ payload });
+        
+        // Send the token in the response body
+        res.status(200).json({ token, user});
     } catch (error) {
         console.error('Error in Google authentication:', error);
         res.status(500).json({ error: 'Internal Server Error' });
