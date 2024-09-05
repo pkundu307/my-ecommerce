@@ -2,6 +2,8 @@ import Cart  from "../models/cart_entity.js";
 
 export const addToCart = async (req, res) => {
     const {id} = req.user;
+    console.log(id);
+    
     const cart = new Cart({...req.body,user:id});
     try {
       const doc = await cart.save();

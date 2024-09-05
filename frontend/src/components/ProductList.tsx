@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { addItemToCart } from "../app/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../app/types";
+import axios from "axios";
 
 const ProductList: React.FC = () => {
   const localStorageUser = localStorage.getItem("user");
@@ -18,6 +19,8 @@ const ProductList: React.FC = () => {
   const dispatch = useDispatch();
 
   const handleAddToCart = async (product: Product) => {
+    
+  
     // Prepare the cart item
     const cartItem = {
       id: product._id,
@@ -42,17 +45,16 @@ const ProductList: React.FC = () => {
            Authorization: `Bearer ${localStorage.getItem("token")}`, // Example JWT token from local storage
 
         },
-        body: JSON.stringify(cartItem),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to add item to cart');
-      }
+  
+      // Dispatch the action to add the item to the cart in the Redux store
+      dispatch(addItemToCart(response.data));
+  
+      console.log("Product added to cart:", response.data);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to add item to cart:", error);
     }
   };
-
   useEffect(() => {
     const fetchProducts = async () => {
       try {

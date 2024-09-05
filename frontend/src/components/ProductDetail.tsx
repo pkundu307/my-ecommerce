@@ -38,6 +38,10 @@ const ProductDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [largeImage, setLargeImage] = useState<string | null>(null); 
 
+  async function handleAddTocart(){
+    
+  }
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -54,6 +58,7 @@ const ProductDetail: React.FC = () => {
       } finally {
         setLoading(false);
       }
+      
     };
 
     fetchProduct();
@@ -213,7 +218,9 @@ const ProductDetail: React.FC = () => {
               <button
                 type="button"
                 className="min-w-[200px] px-4 py-2.5 border border-blue-600 bg-transparent hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded"
+              onClick={handleAddTocart}
               >
+
                 Add to cart
               </button>
             </div>
