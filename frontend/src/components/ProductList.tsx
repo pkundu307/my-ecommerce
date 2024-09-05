@@ -26,16 +26,21 @@ const ProductList: React.FC = () => {
       price: product.price,
       quantity: 1,
     };
-
+ 
+    
     // Dispatch the action to add the item to the cart
     dispatch(addItemToCart(cartItem));
 
     // Optionally, you can send the request to the backend to persist the cart item
     try {
+      console.log(cartItem);
+      
       const response = await fetch('http://localhost:5000/api/cart/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+           Authorization: `Bearer ${localStorage.getItem("token")}`, // Example JWT token from local storage
+
         },
         body: JSON.stringify(cartItem),
       });
@@ -66,7 +71,31 @@ const ProductList: React.FC = () => {
 
     fetchProducts();
   }, []);
-
+  // const addDummyProductToCart = () => {
+  //   const dummyCartData = {
+  //     quantity: 2,
+  //     product: "64e72b8e7c31a9b9c7b1a8e4",  // Example Product ObjectId
+  //     size: "M",
+  //     color: "blue"
+  //   };
+  
+  //   fetch("http://localhost:5000/api/cart/add", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       // You can include the authorization token here if required
+  //       Authorization: `Bearer ${localStorage.getItem("token")}`, // Example JWT token from local storage
+  //     },
+  //     body: JSON.stringify(dummyCartData),
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       console.log("Cart Updated:", data);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error adding product to cart:", error);
+  //     });
+  // };
   return (
     <div className="bg-white">
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
@@ -161,7 +190,7 @@ const ProductList: React.FC = () => {
                     </div>
                   </div>
                   <a
-                     onClick={() => handleAddToCart(product)}
+                     onClick={()=>{handleAddToCart(product)}}
                     href="#"
                     className="flex items-center justify-center rounded-md bg-slate-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
                   >

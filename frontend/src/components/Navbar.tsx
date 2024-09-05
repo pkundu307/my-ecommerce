@@ -50,7 +50,7 @@ function Navbar() {
     credentialResponse: GoogleOAuthResponse
   ) => {
     const { credential, clientId } = credentialResponse;
-
+  
     fetch("http://localhost:5000/api/google-auth", {
       method: "POST",
       headers: {
@@ -61,13 +61,19 @@ function Navbar() {
       .then((response) => response.json())
       .then((data) => {
         console.log("Success:", data);
-        localStorage.setItem("user", JSON.stringify(data));
+  
+        // Save JWT token to localStorage
+        localStorage.setItem("token", data.token);
+  
+        // Optionally, save user data to localStorage or Redux
+        localStorage.setItem("user", JSON.stringify(data.payload));
         dispatch(setUser(data.payload));
       })
       .catch((error) => {
         console.error("Error:", error);
       });
   };
+  
   const handleLogout = () => {
     localStorage.removeItem("user");
     dispatch(clearUser());
@@ -200,11 +206,13 @@ function Navbar() {
       
             {/* Cart Icon */}
             <div className="relative text-white">
+              <Link to='/cart'>
               <img
                 src={cart}
                 alt="Cart"
                 className="rounded-full h-8 w-8"
               />
+              </Link>
               {data > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1 py-0.5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
                   {data}
@@ -302,11 +310,13 @@ function Navbar() {
 
       {/* Cart Icon */}
       <div className="relative text-white">
+        <Link to='/cart'>
         <img
           src={cart}
           alt="Cart"
           className="rounded-full h-8 w-8"
         />
+        </Link>
         {data > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1 py-0.5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
             {data}
