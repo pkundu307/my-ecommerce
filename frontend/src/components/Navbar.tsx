@@ -45,36 +45,11 @@ function Navbar() {
   const handleGoogleLoginSuccess = async (
     credentialResponse: GoogleOAuthResponse
   ) => {
-<<<<<<< HEAD
-    const { credential, clientId } = credentialResponse;
-  
-    fetch("http://localhost:5000/api/google-auth", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ credential, client_id: clientId }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-  
-        // Save JWT token to localStorage
-        localStorage.setItem("token", data.token);
-  
-        // Optionally, save user data to localStorage or Redux
-        localStorage.setItem("user", JSON.stringify(data.payload));
-        dispatch(setUser(data.payload));
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-=======
     const { credential, clientId } = credentialResponse;  
     try {
       const response = await axios.post("http://localhost:5000/api/google-auth", {
         credential,
         client_id: clientId,
->>>>>>> 082eb1ee594823233361e461b30cfac026939150
       });
   
       const { user, token } = response.data;
