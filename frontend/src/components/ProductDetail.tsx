@@ -8,6 +8,7 @@ interface Dimensions {
 }
 
 interface Product {
+  _id: string;
   id: string;
   title: string;
   description: string;
@@ -50,6 +51,8 @@ const ProductDetail: React.FC = () => {
           throw new Error("Failed to fetch product");
         }
         const data: Product = await response.json();
+        console.log(data,'-->');
+        
         setProduct(data);
         {data.images.push(data.thumbnail)}
         setLargeImage(data.thumbnail)
@@ -76,7 +79,32 @@ const ProductDetail: React.FC = () => {
     return <div>Product not found</div>;
     
   }
-
+const addDummyProductToCart = (productToAdd:Product) => {
+    const dummyCartData = {
+      quantity: 2,
+      product: productToAdd.id,  // Example Product ObjectId
+    
+    };
+    console.log(productToAdd);
+    
+  
+    fetch("http://localhost:5000/api/cart/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // You can include the authorization token here if required
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // Example JWT token from local storage
+      },
+      body: JSON.stringify(dummyCartData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Cart Updated:", data);
+      })
+      .catch((error) => {
+        console.error("Error adding product to cart:", error);
+      });
+  };
 
   return (
     <div className="font-sans bg-white">
@@ -218,7 +246,7 @@ const ProductDetail: React.FC = () => {
               <button
                 type="button"
                 className="min-w-[200px] px-4 py-2.5 border border-blue-600 bg-transparent hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded"
-              onClick={handleAddTocart}
+              onClick={()=>addDummyProductToCart(product)}
               >
 
                 Add to cart

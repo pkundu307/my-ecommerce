@@ -66,9 +66,7 @@ function Navbar() {
       console.error("Error:", error);
     }
   };
-<<<<<<< HEAD
-  
-=======
+
 
   const localStorageUser = localStorage.getItem("user");
 const userFromLocalStorage = localStorageUser
@@ -76,7 +74,6 @@ const userFromLocalStorage = localStorageUser
   : null;
 
 const user = useSelector((state: RootState) => state.user.user) || userFromLocalStorage;
->>>>>>> 082eb1ee594823233361e461b30cfac026939150
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("jwtToken")
