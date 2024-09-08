@@ -26,40 +26,71 @@ app.get("/", (req, res) => {
 app.use("/api", productRouter);
 app.use("/api/cart", cartRouter);
 
-// app.post("/google-auth", async (req, res) => {
-//     const { credential, client_id } = req.body;
-//     console.log(credential);
 
-//     try {
-//         const ticket = await client.verifyIdToken({
-//             idToken: credential,
-//             audience: client_id,
-//         });
-//         const payload = ticket.getPayload();
-//         const { email, given_name, family_name } = payload;
-//         console.log(email,given_name,family_name);
-
-//         let user = await User.findOne({ email });
-//         if (!user) {
-//             // Create a user if they do not exist
-//             user = await User.create({
-//                 email,
-//                 name: `${given_name} ${family_name}`,
-//                 authSource: 'google',
-//             });
-//         }
-
-//         // Generate a JWT token
-//         const token = jwt.sign({ user }, JWT_SECRET);
-//         res.status(200)
-//             .cookie('token', token, { httpOnly: true })
-//             .json({ payload });
-//     } catch (error) {
-//         console.error('Error in Google authentication:', error);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// });
 
 app.use("/api", googleAuthRoute);
 
 app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
+
+
+
+
+// ===================================
+// import express from "express";
+// import connectDB from "./database/db.js";
+// import cors from "cors";
+// import productRouter from "./routes/productRoutes.js";
+// import cartRouter from "./routes/cartRoutes.js";
+// import googleAuthRoute from "./routes/userRoutes.js";
+// import cluster from "cluster";
+// import os from "os";
+
+// const PORT = 5000; // Ensure this matches the port in app.listen
+
+// // If the current process is the master, fork workers
+// if (cluster.isPrimary) {
+//   const numCPUs = os.cpus().length; // Get the number of CPU cores
+//   console.log(`Primary ${process.pid} is running`);
+
+//   // Fork workers (one for each CPU core)
+//   for (let i = 0; i < numCPUs; i++) {
+//     cluster.fork();
+//   }
+
+//   // Restart workers when they die
+//   cluster.on("exit", (worker, code, signal) => {
+//     console.log(`Worker ${worker.process.pid} died. Forking a new worker...`);
+//     cluster.fork();
+//   });
+// } else {
+//   // Workers can share the TCP connection
+//   const app = express();
+
+//   // Connect to the database
+//   connectDB();
+
+//   // Middleware to parse JSON bodies
+//   app.use(express.json());
+//   app.use(
+//     cors({
+//       origin: "http://localhost:3000", // or the frontend URL
+//       methods: "GET,POST,PUT,DELETE", // Allowed HTTP methods
+//       credentials: true,
+//     })
+//   );
+
+//   // Basic route
+//   app.get("/", (req, res) => {
+//     res.send("Hello from Worker " + process.pid);
+//   });
+
+//   // API routes
+//   app.use("/api", productRouter);
+//   app.use("/api/cart", cartRouter);
+//   app.use("/api", googleAuthRoute);
+
+//   // Start the server in each worker process
+//   app.listen(PORT, () => {
+//     console.log(`Worker ${process.pid} is running on PORT: ${PORT}`);
+//   });
+// }

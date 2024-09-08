@@ -7,6 +7,9 @@ const userSchema = new Schema({
         unique: true,
         type: String,
     },
+    picture:{
+        type: String,
+    },
     name: {
         required: true,
         type: String

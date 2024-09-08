@@ -1,3 +1,4 @@
+import { CartState } from "./cartSlice";
 export interface UserState {
     user: {
       id: string;
@@ -5,10 +6,6 @@ export interface UserState {
       email: string;
     } | null;
   }
-
-// src/types/Product.ts
-
-
 
 // src/types/Product.ts
 export interface Product {
@@ -44,5 +41,6 @@ export interface Product {
 }
 
 export interface RootState {
+    cart: CartState
     user: UserState;
   }

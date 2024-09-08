@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
+import { addItemToCart } from "../app/cartSlice";
 
 interface Dimensions {
   length: number;
@@ -38,10 +40,8 @@ const ProductDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [largeImage, setLargeImage] = useState<string | null>(null); 
-
-  async function handleAddTocart(){
-    
-  }
+const dispatch = useDispatch()
+ 
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -50,14 +50,16 @@ const ProductDetail: React.FC = () => {
         if (!response.ok) {
           throw new Error("Failed to fetch product");
         }
-        const data: Product = await response.json();
-        console.log(data,'-->');
-        
+        const data: Product = await response.json();        
         setProduct(data);
         {data.images.push(data.thumbnail)}
         setLargeImage(data.thumbnail)
-      } catch (err) {
-        setError(err.message);
+      } catch (err:unknown) {
+        if (err instanceof Error) {
+          setError(err.message); // Safe to access message
+        } else {
+          setError("An unknown error occurred"); // Handle unknown error types
+        }
       } finally {
         setLoading(false);
       }
@@ -100,6 +102,7 @@ const addDummyProductToCart = (productToAdd:Product) => {
       .then((response) => response.json())
       .then((data) => {
         console.log("Cart Updated:", data);
+        dispatch(addItemToCart(data));
       })
       .catch((error) => {
         console.error("Error adding product to cart:", error);
@@ -112,11 +115,11 @@ const addDummyProductToCart = (productToAdd:Product) => {
         <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg">
           <div className="lg:col-span-3 w-full lg:sticky top-0 text-center">
             <div className="px-4 py-10 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative">
-              <img
-                src={largeImage}
-                alt="Product"
-                className="w-3/4 rounded object-cover mx-auto"
-              />
+            <img
+  src={largeImage !== null ? largeImage : undefined}
+  alt="Product"
+  className="w-3/4 rounded object-cover mx-auto"
+/>
               <button type="button" className="absolute top-4 right-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
