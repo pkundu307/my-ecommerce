@@ -8,6 +8,7 @@ const CartComponent = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector(selectCartItems);
   console.log(cartItems);
+  let total = 0
 
   const cartStatus = useSelector(selectCartStatus);
   const cartLength = cartItems.length;
@@ -46,7 +47,10 @@ const CartComponent = () => {
       <h1 className="text-2xl font-extrabold text-gray-800">My Cart</h1>
       <div className="grid md:grid-cols-3 gap-4 mt-8">
         <div className="md:col-span-2 space-y-4">
-          {cartItems.map((item) => (
+          {cartItems.map((item) =>
+
+          (
+        
             <div className="flex gap-4 bg-white px-4 py-6 rounded-md shadow-[0_2px_12px_-3px_rgba(6,81,237,0.3)]" key={item.id}>
               <div className="flex gap-4">
                 <div className="w-28 h-28 max-sm:w-24 max-sm:h-24 shrink-0">
@@ -119,7 +123,7 @@ const CartComponent = () => {
                     ></path>
                   </svg>
                   <button onClick={() => handleDeleteProduct(item.product.id,item.id)}>
-
+              {total+= item.product.price * Number(item.quantity)}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-4 cursor-pointer fill-gray-400 inline-block"
@@ -144,56 +148,7 @@ const CartComponent = () => {
           ))}
         </div>
 
-        <div className="bg-white rounded-md px-4 py-6 h-max shadow-[0_2px_12px_-3px_rgba(6,81,237,0.3)]">
-          <ul className="text-gray-800 space-y-4">
-            <li className="flex flex-wrap gap-4 text-sm">
-              Subtotal <span className="ml-auto font-bold">$200.00</span>
-            </li>
-            <li className="flex flex-wrap gap-4 text-sm">
-              Shipping <span className="ml-auto font-bold">$2.00</span>
-            </li>
-            <li className="flex flex-wrap gap-4 text-sm">
-              Tax <span className="ml-auto font-bold">$4.00</span>
-            </li>
-            <hr className="border-gray-300" />
-            <li className="flex flex-wrap gap-4 text-sm font-bold">
-              Total <span className="ml-auto">$206.00</span>
-            </li>
-          </ul>
 
-          <div className="mt-8 space-y-2">
-            <button
-              type="button"
-              className="text-sm px-4 py-2.5 w-full font-semibold tracking-wide bg-gray-800 hover:bg-gray-900 text-white rounded-md"
-            >
-              Buy Now
-            </button>
-            <button
-              type="button"
-              className="text-sm px-4 py-2.5 w-full font-semibold tracking-wide bg-transparent hover:bg-gray-100 text-gray-800 border border-gray-300 rounded-md"
-            >
-              Continue Shopping
-            </button>
-          </div>
-
-          <div className="mt-4 flex flex-wrap justify-center gap-4">
-            <img
-              src="https://readymadeui.com/images/master.webp"
-              alt="card1"
-              className="w-10 object-contain"
-            />
-            <img
-              src="https://readymadeui.com/images/visa.webp"
-              alt="card2"
-              className="w-10 object-contain"
-            />
-            <img
-              src="https://readymadeui.com/images/american-express.webp"
-              alt="card3"
-              className="w-10 object-contain"
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

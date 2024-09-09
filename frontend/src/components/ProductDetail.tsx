@@ -134,7 +134,7 @@ const addDummyProductToCart = (productToAdd:Product) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // You can include the authorization token here if required
+
         Authorization: `Bearer ${localStorage.getItem("token")}`, // Example JWT token from local storage
       },
       body: JSON.stringify(dummyCartData),

@@ -1,27 +1,72 @@
-import mongoose from 'mongoose';
 import Product from '../models/product/product_entity.js';
 import Review from '../models/product/review_entity.js';
+import AWS from '@aws-sdk/client-s3';
+import Busboy from 'busboy';
 import NodeCache from 'node-cache';
 import User from '../models/user_entity.js';
+import { v4 as uuidv4 } from 'uuid';
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
 const cache = new NodeCache();
 // const cache = new NodeCache();
 // Add a new product
 export const addProduct = async (req, res) => {
-  try {
-    // Remove _id from req.body if it's present
-    const { _id, ...productData } = req.body;
+  const busboy = new Busboy({ headers: req.headers });
+  let productData = {};
+  let imageUploadPromises = [];
+  let imageCount = 0;
 
-    const product = new Product(productData); // Create new product without _id
-    cache.del('products');
-    
-    await product.save();
-    res.status(201).json(product);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+  busboy.on('field', (fieldname, val) => {
+    productData[fieldname] = val; // Collect all other form fields
+  });
+
+  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    if (imageCount < 3) {  // Ensure only 3 images are uploaded
+      const s3Key = `${productData.title}${imageCount + 1}-${uuidv4()}`;
+      const uploadParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: s3Key,
+        Body: file,
+        ContentType: mimetype,
+        ACL: 'public-read', // Makes image publicly accessible
+      };
+
+      // Push upload promises to handle them later
+      imageUploadPromises.push(
+        s3.upload(uploadParams).promise().then((data) => {
+          return data.Location; // Store the URL of the uploaded image
+        })
+      );
+
+      imageCount++;
+    } else {
+      file.resume(); // Ignore files after 3
+    }
+  });
+
+  busboy.on('finish', async () => {
+    try {
+      // Wait for all images to be uploaded to S3
+      const imageUrls = await Promise.all(imageUploadPromises);
+      productData.images = imageUrls; // Assign image URLs to product data
+
+      // Create and save product
+      const product = new Product(productData);
+      await product.save();
+
+      res.status(201).json(product);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  req.pipe(busboy); // Pipe the incoming request to busboy
 };
-
 
 export const bulkInsertProducts = async (req, res) => {
   try {
@@ -167,7 +212,7 @@ export const getReviewsByProductId = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    
+
     // Fetch user details for each review
     const reviewsWithUserNames = await Promise.all(
       product.reviews.map(async (review) => {
