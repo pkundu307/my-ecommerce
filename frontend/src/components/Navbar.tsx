@@ -97,8 +97,11 @@ function Navbar() {
     <>
       <GoogleOAuthProvider clientId="939883123761-up76q4mal36sd3quh558ssccr1cqc035.apps.googleusercontent.com">
         {/* <div className="max-w-screen-lg container mx-auto flex items-center justify-between bg-slate-400 p-5"> */}
+        <nav
+  className="w-full container mx-auto flex items-center justify-between bg-slate-300 p-5"
+  style={{ zIndex: 1, position: 'sticky', top: 0 }}
+>
 
-        <nav className="w-full container mx-auto flex items-center justify-between bg-slate-300 p-5">
           <div className="container mx-auto flex justify-between items-center">
             {/* Left Section: Logo and Search Bar */}
             <div className="flex items-center space-x-4">
@@ -180,7 +183,7 @@ function Navbar() {
 
                   {/* Dropdown Menu */}
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-20">
                       {user ? null : (
                         <a
                           href="#"
@@ -211,7 +214,9 @@ function Navbar() {
                         >
                           Logout
                         </a>
+                        
                       )}
+                  
                     </div>
                   )}
                 </div>
@@ -310,12 +315,20 @@ function Navbar() {
                         Settings
                       </a>
 
+                      {user == null ? null : (
+                        <a
+                          href="#"
+                          className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+                          onClick={handleLogout}
+                        >
+                          Logout
+                        </a>
+                        
+                      )}
                       <a
-                        href="#"
-                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-                        onClick={handleLogout}
-                      >
-                        Logout
+                      href="#"
+                      onClick={()=>setDropdownOpen(false)}>
+                        <center>❌</center>
                       </a>
                     </div>
                   )}

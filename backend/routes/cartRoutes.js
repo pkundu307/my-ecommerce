@@ -6,7 +6,7 @@ const router = express.Router();
 //  /products is already added in base path
 router.post('/add', authenticate,addToCart)
 router.get('/cart',authenticate, fetchCartByUser);
-router.delete('/cart/:productId', authenticate, deleteFromCart);
+router.delete('/delete/:productId', authenticate, deleteFromCart);
 router.put('/cart/:productId', authenticate, updateCart);
 
 export default router;

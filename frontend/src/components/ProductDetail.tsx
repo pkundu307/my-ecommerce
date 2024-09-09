@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { addItemToCart } from "../app/cartSlice";
+import Slider from '@mui/material/Slider';
+import axios from "axios";
 
 interface Dimensions {
   length: number;
@@ -42,11 +44,49 @@ const ProductDetail: React.FC = () => {
   const [largeImage, setLargeImage] = useState<string | null>(null); 
 const dispatch = useDispatch()
  
+const [showPopup, setShowPopup] = useState(false);
+const [rating, setRating] = useState(2.5);
+const [comment, setReview] = useState('');
+
+const handleButtonClick = () => {
+  setShowPopup(true);
+};
+
+const handleClosePopup = () => {
+  setShowPopup(false);
+};
+
+const handleSubmit =async () => {
+  console.log(`Rating: ${rating}, Review: ${comment}`);
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    console.error('No token found');
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      `http://localhost:5000/api/product/addreview/${id}`,
+      { rating, comment },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log('Review added successfully:', response.data);
+  } catch (error) {
+    console.error('Error adding review:', error);
+  }
+  setShowPopup(false);
+};
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/product/${id}`);
+        const response = await fetch(`http://localhost:5000/api/product/product/${id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch product");
         }
@@ -110,12 +150,12 @@ const addDummyProductToCart = (productToAdd:Product) => {
   };
 
   return (
-    <div className="font-sans bg-white">
+    <div className="font-sans bg-white" style={{ zIndex: -1 }}>
       <div className="p-4 lg:max-w-7xl max-w-4xl mx-auto">
         <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg">
           <div className="lg:col-span-3 w-full lg:sticky top-0 text-center">
             <div className="px-4 py-10 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative">
-            <img
+            <img style={{ zIndex: -1 }}
   src={largeImage !== null ? largeImage : undefined}
   alt="Product"
   className="w-3/4 rounded object-cover mx-auto"
@@ -140,20 +180,22 @@ const addDummyProductToCart = (productToAdd:Product) => {
               <div className="mt-8">
                     
                 <div className="flex flex-row flex-wrap justify-center gap-4 mx-auto">
-                  {product.images.map((image, index) => (
-                    <div
-                      key={index}
-                      
-                      className="w-24 h-20 flex items-center justify-center rounded-lg p-2 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] cursor-pointer"
-                    >
-                      <img
-                        src={image}
-                        alt={`Product Image ${index + 1}`}
-                        className="w-full h-full object-cover rounded"
-                        onClick={() => setLargeImage(image)}
-                      />
-                    </div>
-                  ))}
+                {product.images.map((image, index) => (
+  <div
+    key={index}
+    className="w-24 h-20 flex items-center justify-center rounded-lg p-2 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] cursor-pointer"
+    style={{ minWidth: '6rem', minHeight: '5rem' }} // Added min width/height to enforce constant size
+  >
+    <img
+      src={image}
+      alt={`Product Image ${index + 1}`}
+      className="w-full h-full object-cover rounded"
+      style={{ maxWidth: '6rem', maxHeight: '5rem' }} // Added max width/height to control image scaling
+      onClick={() => setLargeImage(image)}
+    />
+  </div>
+))}
+
                 </div>
               </div>
             )}
@@ -450,6 +492,68 @@ const addDummyProductToCart = (productToAdd:Product) => {
               >
                 Read all reviews
               </button>
+              <button
+                 onClick={handleButtonClick}
+                type="button"
+                className="w-full mt-10 px-4 py-2.5 bg-transparent hover:bg-gray-50 border border-blue-600 text-gray-800 font-bold rounded"
+              >
+                Give a review
+              </button>
+              {showPopup && (
+        <div className="flex justify-center items-center h-screen">
+        <button
+          type="button"
+          className="w-full mt-10 px-4 py-2.5 bg-transparent hover:bg-gray-50 border border-blue-600 text-gray-800 font-bold rounded"
+          onClick={handleButtonClick}
+        >
+          Give a review
+        </button>
+  
+        {showPopup && (
+          <div className="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50">
+            <div className="bg-white p-6 rounded shadow-lg">
+              <h2 className="text-xl font-bold mb-4">Give a Review</h2>
+              <label className="block mb-2">
+                Rating ({ rating}):
+                <Slider
+                  color="primary"
+                  defaultValue={2.5}
+                  min={0.1}
+                  max={5}
+                  step={0.1}
+                  value={rating}
+                  onChange={(e, newValue) => setRating(newValue as number)}
+                />
+              </label>
+              <label className="block mb-4">
+                Review:
+                <textarea
+                  value={comment}
+                  onChange={(e) => setReview(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded"
+                />
+              </label>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="mr-2 px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+                  onClick={handleClosePopup}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded"
+                  onClick={handleSubmit}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      )}
             </div>
           </div>
         </div>

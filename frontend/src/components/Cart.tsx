@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCart, removeItemFromCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
 import { RootState } from "../app/types"; // Import from your store
+import axios from "axios";
 
 const CartComponent = () => {
   const dispatch = useDispatch();
@@ -16,32 +17,41 @@ const CartComponent = () => {
       dispatch(fetchCart());
     }
   }, [dispatch, cartStatus]);
-async function handleDelete(id:string){
-    try {
-      await fetch(`http://localhost:5000/api/cart/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      dispatch(removeItemFromCart(cartItems[0].id));
-    } catch (error) {
-      console.error(error);
+  const handleDeleteProduct = async (productId: string,cartId:string) => {
+    const token = localStorage.getItem('token');
+  
+    if (!token) {
+      console.error('No token found');
+      return;
     }
   
-}
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/api/cart/delete/${productId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      dispatch(removeItemFromCart(cartId));
+      console.log('Product deleted successfully:', response.data);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
+  };
+  
   return (
-    <div className="font-sans max-w-6xl max-md:max-w-xl mx-auto p-4">
+    <div className="font-sans max-w-6xl max-md:max-w-xl mx-auto p-4" style={{ zIndex: -1 }}>
       <h1 className="text-2xl font-extrabold text-gray-800">My Cart</h1>
       <div className="grid md:grid-cols-3 gap-4 mt-8">
         <div className="md:col-span-2 space-y-4">
           {cartItems.map((item) => (
-            <div className="flex gap-4 bg-white px-4 py-6 rounded-md shadow-[0_2px_12px_-3px_rgba(6,81,237,0.3)]">
+            <div className="flex gap-4 bg-white px-4 py-6 rounded-md shadow-[0_2px_12px_-3px_rgba(6,81,237,0.3)]" key={item.id}>
               <div className="flex gap-4">
                 <div className="w-28 h-28 max-sm:w-24 max-sm:h-24 shrink-0">
                   <img
-                    src={item.product.thumbnail} 
+                    src={item.product.thumbnail||""} 
                     className="w-full h-full object-contain rounded-lg"
                     alt="Product Thumbnail"
                   />
@@ -108,7 +118,7 @@ async function handleDelete(id:string){
                       data-original="#000000"
                     ></path>
                   </svg>
-                  <button onClick={() => handleDelete(item.id)}>
+                  <button onClick={() => handleDeleteProduct(item.product.id,item.id)}>
 
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

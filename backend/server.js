@@ -20,10 +20,11 @@ app.use(
     credentials: true,
   })
 );
+app.use(cors())
 app.get("/", (req, res) => {
   res.send("Hello");
 });
-app.use("/api", productRouter);
+app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 
 

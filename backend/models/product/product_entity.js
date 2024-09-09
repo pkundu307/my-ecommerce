@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
@@ -66,6 +66,7 @@ const productSchema = new Schema(
     },
     manufacturer: { type: String },
     supplier: { type: String },
+    reviews: [{ type: Schema.Types.ObjectId, ref: 'Review' }]
   },
   { timestamps: true }
 );

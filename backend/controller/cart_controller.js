@@ -29,7 +29,7 @@ export const fetchCartByUser = async (req, res) => {
 
   try {
     const cartItems = await Cart.find({ user: id })
-      .populate('product', 'price thumbnail title') // Populate only the required fields from product
+      .populate('product', 'price thumbnail title _id') // Populate only the required fields from product
       .select('quantity product'); // Select quantity and product
 
     if (!cartItems || cartItems.length === 0) {

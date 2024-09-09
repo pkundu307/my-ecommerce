@@ -4,6 +4,8 @@ import BulkUploadProducts from './BulkUploadProducts';
 
 const ProductForm: React.FC = () => {
   const [product, setProduct] = useState<Product>({
+    _id: '',  // Default _id field
+    id: '',   // Default id field
     title: '',
     description: '',
     price: 0,
@@ -19,6 +21,7 @@ const ProductForm: React.FC = () => {
     weight: 0,
     dimensions: { length: 0, width: 0, height: 0 },
   });
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProduct({
@@ -39,10 +42,11 @@ const ProductForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/products', {
+      const response = await fetch('http://localhost:5000/api/product/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify(product),
       });
