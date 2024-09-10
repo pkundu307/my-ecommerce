@@ -26,10 +26,7 @@ app.get("/", (req, res) => {
 });
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
-
-
-
-app.use("/api", googleAuthRoute);
+app.use("/api/auth", googleAuthRoute);
 
 app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
 

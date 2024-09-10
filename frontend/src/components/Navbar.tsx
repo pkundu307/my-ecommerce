@@ -23,24 +23,66 @@ function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
   const [isLoginView, setIsLoginView] = useState(true); // New state for toggling between login and sign-up
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
-
+  const toggleView = () => {
+    setIsLoginView(!isLoginView);
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+  };
   const openLoginPopup = () => {
     setLoginPopupOpen(true);
     setDropdownOpen(false); // Optionally close the dropdown
   };
-  const toggleView = () => {
-    setIsLoginView(!isLoginView);
-  };
+ 
 
   const closeLoginPopup = () => {
     setLoginPopupOpen(false);
   };
   const dispatch = useDispatch();
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!email || !password || (!isLoginView && password !== confirmPassword)) {
+      return alert("Please fill in all required fields correctly.");
+    }
+
+    try {
+      let response;
+      if (isLoginView) {
+        // Login logic
+        response = await axios.post<{ token: string }>("http://localhost:5000/api/auth/login", {
+          email,
+          password,
+        });
+      } else {
+        // Sign-up logic
+        response = await axios.post<{ token: string }>("http://localhost:5000/api/auth/signup", {
+          email,
+          password,
+          name: email, // Assuming name is the same as email for simplicity
+        });
+      }
+
+      // Store JWT token in localStorage
+      const token = response.data.token;
+      localStorage.setItem("token", token);
+
+      closeLoginPopup(); // Close popup after successful login/signup
+    } catch (error) {
+      console.error("Authentication error:", error);
+      alert(
+        (error as any).response?.data?.error ||
+          "An error occurred during authentication."
+      );
+    }
+  };
 
   const handleGoogleLoginSuccess = async (
     credentialResponse: GoogleOAuthResponse
@@ -48,7 +90,7 @@ function Navbar() {
     const { credential, clientId } = credentialResponse;
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/google-auth",
+        "http://localhost:5000/api/auth/google-auth",
         {
           credential,
           client_id: clientId,
@@ -183,39 +225,41 @@ function Navbar() {
 
                   {/* Dropdown Menu */}
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-20">
-                      {user ? null : (
-                        <a
-                          href="#"
-                          className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-                          onClick={openLoginPopup}
-                        >
-                          Login
-                        </a>
-                      )}
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-                      >
-                        Profile
-                      </a>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-                      >
-                        Settings
-                      </a>
-                      {user == null ? null : (
-                        <a
-                          href="#"
-                          className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-                          onClick={handleLogout}
-                        >
-                          Logout
-                        </a>
-                        )}
-                
-                    </div>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2">
+  {user ? null : (
+    <a
+      href="#"
+      className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+      onClick={openLoginPopup}
+    >
+      Login
+    </a>
+  )}
+  <a
+    href="#"
+    className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+  >
+    <Link to="/profile">
+    Profile
+    </Link>
+  </a>
+  <a
+    href="#"
+    className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+  >
+    Settings
+  </a>
+  {user && (
+    <a
+      href="#"
+      className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+      onClick={handleLogout}
+    >
+      Logout
+    </a>
+  )}
+</div>
+
                   )}
                 </div>
 
@@ -300,12 +344,14 @@ function Navbar() {
                           Login
                         </a>
                       )}
+                       {user == null ? null : (
                       <a
                         href="#"
                         className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
                       >
                         Profile
                       </a>
+                       )}
                       <a
                         href="#"
                         className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
@@ -352,84 +398,91 @@ function Navbar() {
           )}
 
           {/* Login Popup */}
-          {loginPopupOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-                <h2 className="text-xl font-semibold mb-4">
-                  {isLoginView ? "Login" : "Sign Up"}
-                </h2>
-                <form>
+          {
+         loginPopupOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+              <h2 className="text-xl font-semibold mb-4">
+                {isLoginView ? "Login" : "Sign Up"}
+              </h2>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                  <label htmlFor="email" className="block text-gray-600">
+                    Email:
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    className="w-full border rounded-md py-2 px-3"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label htmlFor="password" className="block text-gray-600">
+                    Password:
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    className="w-full border rounded-md py-2 px-3"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+    
+                {/* Confirm Password field for Sign-Up */}
+                {!isLoginView && (
                   <div className="mb-4">
-                    <label htmlFor="email" className="block text-gray-600">
-                      Email:
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      className="w-full border rounded-md py-2 px-3"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label htmlFor="password" className="block text-gray-600">
-                      Password:
+                    <label htmlFor="confirm-password" className="block text-gray-600">
+                      Confirm Password:
                     </label>
                     <input
                       type="password"
-                      id="password"
+                      id="confirm-password"
                       className="w-full border rounded-md py-2 px-3"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
                     />
                   </div>
-
-                  {/* Confirm Password field for Sign-Up */}
-                  {!isLoginView && (
-                    <div className="mb-4">
-                      <label
-                        htmlFor="confirm-password"
-                        className="block text-gray-600"
-                      >
-                        Confirm Password:
-                      </label>
-                      <input
-                        type="password"
-                        id="confirm-password"
-                        className="w-full border rounded-md py-2 px-3"
-                      />
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-                  >
-                    {isLoginView ? "Login" : "Sign Up"}
-                  </button>
-                  <button
-                    type="button"
-                    className="text-gray-600 ml-4"
-                    onClick={closeLoginPopup}
-                  >
-                    Cancel
-                  </button>
-                </form>
-                <div className="mt-4">
-                  <GoogleLogin
-                    onSuccess={handleGoogleLoginSuccess}
-                    onError={handleGoogleLoginFailure}
-                  />
-                </div>
-                <div className="mt-4 text-center">
-                  <button
-                    type="button"
-                    className="text-blue-500"
-                    onClick={toggleView}
-                  >
-                    {isLoginView
-                      ? "Don't have an account? Sign Up"
-                      : "Already have an account? Login"}
-                  </button>
-                </div>
+                )}
+    
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                >
+                  {isLoginView ? "Login" : "Sign Up"}
+                </button>
+                <button
+                  type="button"
+                  className="text-gray-600 ml-4"
+                  onClick={closeLoginPopup}
+                >
+                  Cancel
+                </button>
+              </form>
+              <div className="mt-4">
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginFailure}
+                />
+              </div>
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  className="text-blue-500"
+                  onClick={toggleView}
+                >
+                  {isLoginView
+                    ? "Don't have an account? Sign Up"
+                    : "Already have an account? Login"}
+                </button>
               </div>
             </div>
+          </div>
           )}
         </nav>
       </GoogleOAuthProvider>
