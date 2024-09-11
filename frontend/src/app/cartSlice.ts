@@ -8,7 +8,7 @@ interface CartItem {
   quantity: number;
   product: {
     id: string;
-    title:string;
+    title: string;
     price: number;
     thumbnail: string;
   };
@@ -19,6 +19,7 @@ export interface CartState {
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
+
 const initialState: CartState = {
   items: [],
   status: 'idle',
@@ -44,6 +45,30 @@ export const fetchCart = createAsyncThunk<CartItem[], void, { state: RootState }
   }
 );
 
+// Update cart item quantity by productId
+export const updateCart = createAsyncThunk<CartItem, { productId: string; quantity: number }, { state: RootState }>(
+  'cart/updateCart',
+  async ({ productId, quantity }, { rejectWithValue }) => {
+    try {
+
+      
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `http://localhost:5000/api/cart/cart/${productId}`,
+        { quantity },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update cart');
+    }
+  }
+);
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
@@ -52,7 +77,7 @@ const cartSlice = createSlice({
       state.items.push(action.payload);
     },
     removeItemFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
+      state.items = state.items.filter((item) => item.id !== action.payload);
     },
     clearCart: (state) => {
       state.items = [];
@@ -71,10 +96,40 @@ const cartSlice = createSlice({
       .addCase(fetchCart.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
+      })
+      .addCase(updateCart.pending, (state) => {
+        console.log(state,'s1');
+        
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateCart.fulfilled, (state, action: PayloadAction<CartItem>) => {
+        state.status = 'succeeded';
+        const updatedItem = action.payload;
+        console.log(action.payload,'---->ap');
+        console.log(state.items[0].quantity,'ss2');
+        console.log(updatedItem,'ui');
+        
+        // Check if the product exists in the cart and update its quantity
+        const existingItem = state.items.find(item => item.product.id === updatedItem.product.id);
+        console.log(existingItem,'ei');
+        // -----------------------------------------------------------
+        //check
+        if (existingItem) {
+          existingItem.quantity = updatedItem.updatedCart.quantity;
+          console.log(existingItem,'ei');
+          
+        }
+      })
+      .addCase(updateCart.rejected, (state, action) => {
+        console.log(state,'s2');
+        state.status = 'failed';
+        state.error = action.payload as string;
       });
   },
 });
 export const { addItemToCart, removeItemFromCart, clearCart } = cartSlice.actions;
+
 // Selectors
 export const selectCartItems = (state: RootState) => state.cart.items;
 export const selectCartStatus = (state: RootState) => state.cart.status;
