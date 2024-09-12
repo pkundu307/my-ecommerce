@@ -50,8 +50,6 @@ export const updateCart = createAsyncThunk<CartItem, { productId: string; quanti
   'cart/updateCart',
   async ({ productId, quantity }, { rejectWithValue }) => {
     try {
-
-      
       const token = localStorage.getItem('token');
       const response = await axios.put(
         `http://localhost:5000/api/cart/cart/${productId}`,
@@ -62,12 +60,17 @@ export const updateCart = createAsyncThunk<CartItem, { productId: string; quanti
           },
         }
       );
-      return response.data;
+
+      // Extract the updated cart item
+      const updatedItem = response.data.updatedCart;
+      return updatedItem;  // Return updated item
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update cart');
     }
   }
 );
+
+
 
 const cartSlice = createSlice({
   name: 'cart',
@@ -103,25 +106,24 @@ const cartSlice = createSlice({
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(updateCart.fulfilled, (state, action: PayloadAction<CartItem>) => {
-        state.status = 'succeeded';
-        const updatedItem = action.payload;
-        console.log(action.payload,'---->ap');
-        console.log(state.items[0].quantity,'ss2');
-        console.log(updatedItem,'ui');
-        
-        // Check if the product exists in the cart and update its quantity
-        const existingItem = state.items.find(item => item.product.id === updatedItem.product.id);
-        console.log(existingItem,'ei');
-        // -----------------------------------------------------------
-        //check
-        if (existingItem) {
-          existingItem.quantity = updatedItem.updatedCart.quantity;
-          console.log(existingItem,'ei');
-          
-        }
-      })
-      .addCase(updateCart.rejected, (state, action) => {
+ .addCase(updateCart.fulfilled, (state, action: PayloadAction<CartItem>) => {
+  state.status = 'succeeded';
+  const updatedItem = action.payload;
+
+  // Check if updatedItem and updatedItem.product exist
+  if (!updatedItem || !updatedItem.product) {
+    console.error('Updated item or product is undefined');
+    return;
+  }
+
+  // Find the existing cart item and update the quantity
+  const existingItem = state.items.find(item => item.product.id === updatedItem.product.id);
+
+  if (existingItem) {
+    existingItem.quantity = updatedItem.quantity;  // Assuming `updatedItem.quantity` is correct
+  }
+})
+.addCase(updateCart.rejected, (state, action) => {
         console.log(state,'s2');
         state.status = 'failed';
         state.error = action.payload as string;
