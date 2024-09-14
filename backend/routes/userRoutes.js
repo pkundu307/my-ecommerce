@@ -1,5 +1,5 @@
 import express from 'express';
-import { googleAuthController, loginController, signUpController } from '../controller/user_controller.js';
+import { googleAuthController, loginController, signUpController, updateUser } from '../controller/user_controller.js';
 import authenticate from '../middlewares/auth.js';
 const router = express.Router();
 
@@ -9,4 +9,5 @@ router.post('/signup', signUpController)
 router.get('/profile', authenticate, (req, res) => {
     res.json(req.user);
   });
+router.put('/update',authenticate,updateUser)
 export default router;

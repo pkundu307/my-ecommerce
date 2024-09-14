@@ -22,8 +22,7 @@ const userSchema = new Schema({
         type: String,
         enum: ["self", "google"],
         default: "self"
-    },
-    addresses: { type: [Schema.Types.Mixed] }, 
+    }
 });
 
 const User = mongoose.model("User", userSchema);
