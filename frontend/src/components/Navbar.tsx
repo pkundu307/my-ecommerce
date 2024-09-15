@@ -235,14 +235,17 @@ function Navbar() {
       Login
     </a>
   )}
+    <Link to="/profile">
   <a
+  onClick={()=>setDropdownOpen(false)}
     href="#"
     className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
   >
-    <Link to="/profile">
+  
     Profile
-    </Link>
+
   </a>
+  </Link>
   <a
     href="#"
     className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
