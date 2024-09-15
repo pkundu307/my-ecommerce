@@ -24,14 +24,14 @@ export const googleAuthController = async (req, res) => {
       // Create a user if they do not exist
       user = await User.create({
         email,
-        name: `${given_name} ${family_name}`,
+        name:`${given_name}`,
         picture, // Save picture in the database
         authSource: 'google',
       });
     } else {
       // Update the user's profile picture if it has changed
       user.picture = picture;
-      console.log(user);
+      // console.log(user);
       
       await user.save();
     }
@@ -103,5 +103,41 @@ export const loginController = async (req, res) => {
   } catch (error) {
     console.error('Error in user login:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  const { name, email, picture, addresses } = req.body;
+  const { id } = req.user; // Extract userId from the decoded JWT token
+
+  try {
+    // Find the user by the ID from the token
+    const user = await User.findById(id);
+console.log(user,'pppp');
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update fields if they are provided
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (picture) user.picture = picture;
+
+    // Append new addresses to the existing addresses array if provided
+    if (addresses && Array.isArray(addresses)) {
+      user.addresses = [...user.addresses, ...addresses];
+    }
+
+    // Save the updated user
+    await user.save();
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return res.status(500).json({ message: "Error updating user", error: error.message });
   }
 };

@@ -3,8 +3,8 @@ import connectDB from "./database/db.js";
 import cors from "cors";
 import productRouter from "./routes/productRoutes.js";
 import cartRouter from "./routes/cartRoutes.js";
-import googleAuthRoute from "./routes/userRoutes.js";
-
+import userAuthRoute from "./routes/userRoutes.js";
+import addressRouter from "./routes/addressRoute.js"
 const app = express();
 const PORT = 5000; // Ensure this matches the port in app.listen
 
@@ -26,8 +26,8 @@ app.get("/", (req, res) => {
 });
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
-app.use("/api/auth", googleAuthRoute);
-
+app.use("/api/auth", userAuthRoute);
+app.use("/api/addresses", addressRouter)
 app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
 
 
@@ -39,7 +39,7 @@ app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
 // import cors from "cors";
 // import productRouter from "./routes/productRoutes.js";
 // import cartRouter from "./routes/cartRoutes.js";
-// import googleAuthRoute from "./routes/userRoutes.js";
+// import userAuthRoute from "./routes/userRoutes.js";
 // import cluster from "cluster";
 // import os from "os";
 
@@ -85,7 +85,7 @@ app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
 //   // API routes
 //   app.use("/api", productRouter);
 //   app.use("/api/cart", cartRouter);
-//   app.use("/api", googleAuthRoute);
+//   app.use("/api", userAuthRoute);
 
 //   // Start the server in each worker process
 //   app.listen(PORT, () => {

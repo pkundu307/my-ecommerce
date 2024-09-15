@@ -235,17 +235,15 @@ function Navbar() {
       Login
     </a>
   )}
-    <Link to="/profile">
-  <a
-  onClick={()=>setDropdownOpen(false)}
-    href="#"
-    className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-  >
-  
+<a
+  onClick={() => setDropdownOpen(false)}
+  className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+>
+  <Link to="/profile">
     Profile
-
-  </a>
   </Link>
+</a>
+
   <a
     href="#"
     className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
@@ -348,12 +346,14 @@ function Navbar() {
                         </a>
                       )}
                        {user == null ? null : (
-                      <a
-                        href="#"
+                        <Link to="/profile">                     <a
+                        
                         className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
                       >
                         Profile
                       </a>
+                      </Link>
+ 
                        )}
                       <a
                         href="#"

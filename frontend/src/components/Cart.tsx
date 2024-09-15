@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCart, removeItemFromCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
 import { updateCart } from "../app/cartSlice"; // Assuming this is exported from your slice
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const CartComponent = () => {
   const dispatch = useDispatch();
@@ -126,7 +127,7 @@ const CartComponent = () => {
             className="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
             onClick={() => console.log("Proceed to Checkout")}
           >
-            Proceed to Checkout
+          <Link to='/order'> Proceed to Checkout</Link> 
           </button>
         </div>
       </div>
