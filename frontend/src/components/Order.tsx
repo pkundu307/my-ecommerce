@@ -1,6 +1,9 @@
 // src/OrderPage.tsx
-import React, { useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
+import axios from "axios";
+import AddressList from './Addresses';
 interface Address {
   id: string;
   street: string;
@@ -18,11 +21,22 @@ interface CartItem {
 }
 
 const OrderPage: React.FC = () => {
+  const dispatch = useDispatch();
+  const cart = useSelector(selectCartItems);
+  
+
+  const cartStatus = useSelector(selectCartStatus);
+
+  useEffect(() => {
+    if (cartStatus === "idle") {
+      dispatch(fetchCart());
+    }
+  }, [dispatch, cartStatus]);
   // Dummy data
-  const cart: CartItem[] = [
-    { id: '1', name: 'Product 1', price: 29.99, quantity: 2 },
-    { id: '2', name: 'Product 2', price: 49.99, quantity: 1 },
-  ];
+  // const cart: CartItem[] = [
+  //   { id: '1', name: 'Product 1', price: 29.99, quantity: 2 },
+  //   { id: '2', name: 'Product 2', price: 49.99, quantity: 1 },
+  // ];
 
   const addresses: Address[] = [
     {
@@ -46,7 +60,7 @@ const OrderPage: React.FC = () => {
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('creditCard');
 
-  const totalAmount = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const totalAmount = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedAddress(e.target.value);
@@ -61,6 +75,8 @@ const OrderPage: React.FC = () => {
     console.log('Order placed:', { selectedAddress, paymentMethod });
   };
 
+  
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Order Summary</h1>
@@ -69,15 +85,19 @@ const OrderPage: React.FC = () => {
         <h2 className="text-2xl font-semibold mb-4">Products</h2>
         {cart.map((item) => (
           <div key={item.id} className="flex justify-between items-center mb-4 border-b pb-2">
-            <span>{item.name}</span>
-            <span>{item.quantity} x ${item.price.toFixed(2)}</span>
+           <div className='h-10 w-10'><img src={item.product.thumbnail || ""}
+                    className="w-full h-full object-contain rounded-lg"
+                    alt="Product Thumbnail"
+                  /></div>
+            <span>{item.product.title}</span>
+            <span>{item.product.price}</span>
           </div>
         ))}
       </div>
 
       <div className="mb-6">
         <h2 className="text-2xl font-semibold mb-4">Total Amount</h2>
-        <div className="text-xl font-bold">${totalAmount.toFixed(2)}</div>
+        <div className="text-xl font-bold">₹{totalAmount.toFixed(2)}</div>
       </div>
 
       <div className="mb-6">
