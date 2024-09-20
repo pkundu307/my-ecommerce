@@ -2,28 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
-import axios from "axios";
-import AddressList from './Addresses';
-interface Address {
-  id: string;
-  street: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-}
+import { fetchAddresses } from '../app/addressSlice';
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
+
 
 const OrderPage: React.FC = () => {
   const dispatch = useDispatch();
   const cart = useSelector(selectCartItems);
-  
+  const [selectedAddress, setSelectedAddress] = useState<string | undefined>(undefined);
 
   const cartStatus = useSelector(selectCartStatus);
 
@@ -32,39 +18,22 @@ const OrderPage: React.FC = () => {
       dispatch(fetchCart());
     }
   }, [dispatch, cartStatus]);
-  // Dummy data
-  // const cart: CartItem[] = [
-  //   { id: '1', name: 'Product 1', price: 29.99, quantity: 2 },
-  //   { id: '2', name: 'Product 2', price: 49.99, quantity: 1 },
-  // ];
+  const { addresses, status, error } = useSelector((state: RootState) => state.address);
 
-  const addresses: Address[] = [
-    {
-      id: 'a1',
-      street: '123 Main St',
-      city: 'Anytown',
-      state: 'CA',
-      postalCode: '12345',
-      country: 'USA',
-    },
-    {
-      id: 'a2',
-      street: '456 Elm St',
-      city: 'Othertown',
-      state: 'TX',
-      postalCode: '67890',
-      country: 'USA',
-    },
-  ];
+  // Fetch addresses on component mount
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchAddresses());
+    }
+  }, [dispatch, status]);
 
-  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedAddress(event.target.value);
+  };
   const [paymentMethod, setPaymentMethod] = useState<string>('creditCard');
 
   const totalAmount = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedAddress(e.target.value);
-  };
 
   const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPaymentMethod(e.target.value);
@@ -72,70 +41,118 @@ const OrderPage: React.FC = () => {
 
   const handlePlaceOrder = () => {
     // Logic to place the order
-    console.log('Order placed:', { selectedAddress, paymentMethod });
+    console.log('Order placed:', {  paymentMethod });
   };
 
   
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Order Summary</h1>
+<div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+  <h1 className="text-4xl font-bold mb-6 text-indigo-600">Order Summary</h1>
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Products</h2>
-        {cart.map((item) => (
-          <div key={item.id} className="flex justify-between items-center mb-4 border-b pb-2">
-           <div className='h-10 w-10'><img src={item.product.thumbnail || ""}
-                    className="w-full h-full object-contain rounded-lg"
-                    alt="Product Thumbnail"
-                  /></div>
-            <span>{item.product.title}</span>
-            <span>{item.product.price}</span>
-          </div>
-        ))}
-      </div>
+  <div className="mb-6">
+    <h2 className="text-3xl font-semibold mb-4 text-gray-800">Products</h2>
+    <table className="min-w-full bg-white border border-gray-200">
+    <thead>
+      <tr className="text-left border-b bg-gray-100">
+        <th className="px-4 py-2 text-lg font-semibold text-gray-800"></th>
+        <th className="px-4 py-2 text-lg font-semibold text-gray-800">product</th>
+        <th className="px-4 py-2 text-lg font-semibold text-gray-800">Quantity</th>
+        <th className="px-4 py-2 text-lg font-semibold text-gray-800">Price</th>
+        <th className="px-4 py-2 text-lg font-semibold text-gray-800">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {cart.map((item) => (
+        <tr key={item.id} className="border-b hover:bg-gray-50">
+          <td className="px-4 py-2">
+            <div className='h-16 w-16'>
+              <img 
+                src={item.product.thumbnail || ""}
+                className="w-full h-full object-cover rounded-lg shadow-sm"
+                alt="Product Thumbnail"
+              />
+            </div>
+          </td>
+          <td className="px-4 py-2 text-gray-800 break-words max-w-xs">
+  {item.product.title}
+</td>
+          <td className="px-4 py-2 text-gray-600">{item.quantity}</td>
+          <td className="px-4 py-2 text-gray-600">₹{item.product.price.toFixed(2)}</td>
+          <td className="px-4 py-2 text-gray-600">₹{(item.product.price * item.quantity).toFixed(2)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  </div>
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Total Amount</h2>
-        <div className="text-xl font-bold">₹{totalAmount.toFixed(2)}</div>
-      </div>
+  <div className="mb-6">
+    <h2 className="text-3xl font-semibold mb-4 text-gray-800">Total Amount</h2>
+    <div className="text-2xl font-bold text-indigo-600">₹{totalAmount.toFixed(2)}</div>
+  </div>
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Select Address</h2>
+  <div className="p-4 bg-gray-100 rounded-md">
+    <h2 className="text-lg font-bold mb-4 text-gray-800">Select an Address</h2>
+
+    {status === 'loading' && <p>Loading addresses...</p>}
+    {status === 'failed' && <p className="text-red-500">Error: {error}</p>}
+    
+    {status === 'succeeded' && (
+      <div>
+        <label htmlFor="addressDropdown" className="block mb-2 text-sm font-medium text-gray-700">
+          Address
+        </label>
         <select
+          id="addressDropdown"
           value={selectedAddress}
-          onChange={handleAddressChange}
-          className="border p-2 w-full"
+          onChange={handleSelectChange}
+          className="block w-full p-2 border border-gray-300 rounded-md bg-white shadow-sm hover:border-indigo-500 transition duration-200 ease-in-out"
         >
-          <option value="">Select an address</option>
+          <option value="" disabled>
+            -- Select an Address --
+          </option>
           {addresses.map((address) => (
-            <option key={address.id} value={address.id}>
-              {`${address.street}, ${address.city}, ${address.state} - ${address.postalCode}`}
+            <option key={address._id} value={address._id}>
+              {`${address.street}, ${address.city}, ${address.state}, ${address.country} - ${address.postalCode}`}
             </option>
           ))}
         </select>
-      </div>
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Payment Method</h2>
-        <select
-          value={paymentMethod}
-          onChange={handlePaymentMethodChange}
-          className="border p-2 w-full"
-        >
-          <option value="creditCard">Credit Card</option>
-          <option value="paypal">PayPal</option>
-          <option value="bankTransfer">Bank Transfer</option>
-        </select>
+        {selectedAddress && (
+          <div className="mt-4">
+            <h3 className="text-md font-semibold">Selected Address:</h3>
+            <p>{addresses.find((addr) => addr._id === selectedAddress)?.street}</p>
+            <p>{addresses.find((addr) => addr._id === selectedAddress)?.city}</p>
+            <p>{addresses.find((addr) => addr._id === selectedAddress)?.state}</p>
+            <p>{addresses.find((addr) => addr._id === selectedAddress)?.postalCode}</p>
+            <p>{addresses.find((addr) => addr._id === selectedAddress)?.country}</p>
+          </div>
+        )}
       </div>
+    )}
+  </div>
 
-      <button
-        onClick={handlePlaceOrder}
-        className="bg-blue-500 text-white p-4 rounded w-full mt-4"
-      >
-        Place Order
-      </button>
-    </div>
+  <div className="mb-6 mt-4">
+    <h2 className="text-3xl font-semibold mb-4 text-gray-800">Payment Method</h2>
+    <select
+      value={paymentMethod}
+      onChange={handlePaymentMethodChange}
+      className="border p-2 w-full rounded-md bg-white shadow-sm hover:border-indigo-500 transition duration-200 ease-in-out"
+    >
+      <option value="creditCard">Credit Card</option>
+      <option value="paypal">PayPal</option>
+      <option value="bankTransfer">Bank Transfer</option>
+    </select>
+  </div>
+
+  <button
+    onClick={handlePlaceOrder}
+    className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded w-full mt-4 transition duration-200 ease-in-out"
+  >
+    Place Order
+  </button>
+</div>
+
   );
 };
 

@@ -11,6 +11,7 @@ import ProfilePage from './pages/ProfilePage';
 import { useEffect } from 'react';
 import { fetchCart, selectCartStatus } from './app/cartSlice';
 import OrderPage from './pages/OrderPage';
+import PaymentComponent from './components/Test';
 
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
         <Route path="/order" element={<OrderPage/>} />
       </Routes>
       <Footer/>
+
     </Router>
     </Provider>
   );
