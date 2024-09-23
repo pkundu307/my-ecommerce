@@ -2,9 +2,9 @@ import Order from "../models/order_entity.js";
 // Create a new order
 export const createOrder = async (req, res) => {
   try {
-    const {id}= req.body;
+    const {id}= req.user;
     const { items, totalAmount, paymentMethod, selectedAddress } = req.body;
-    console.log(items, totalAmount, paymentMethod, selectedAddress);
+    console.log(items, totalAmount, paymentMethod, selectedAddress, id);
     
     // const order = new Order({
     //   items,
