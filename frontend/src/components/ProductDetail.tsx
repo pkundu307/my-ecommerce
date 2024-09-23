@@ -123,7 +123,7 @@ const handleSubmit =async () => {
   }
 const addDummyProductToCart = (productToAdd:Product) => {
     const dummyCartData = {
-      quantity: 2,
+      quantity: 1,
       product: productToAdd.id,  // Example Product ObjectId
     
     };

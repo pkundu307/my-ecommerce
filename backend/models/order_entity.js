@@ -1,11 +1,16 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const orderSchema = new Schema(
   {
-    items: { type: [Schema.Types.Mixed], required: true },
+    // Items array containing productId and quantity for each product in the order
+    items: [
+      {
+        productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+        quantity: { type: Number, required: true },
+      },
+    ],
     totalAmount: { type: Number, required: true },
-    totalItems: { type: Number, required: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 
     // Payment details
@@ -43,6 +48,7 @@ const orderSchema = new Schema(
   { timestamps: true }
 );
 
+
 // Virtual field for order ID
 const virtual = orderSchema.virtual('id');
 virtual.get(function () {
@@ -58,4 +64,5 @@ orderSchema.set('toJSON', {
   },
 });
 
-exports.Order = mongoose.model('Order', orderSchema);
+const Order = mongoose.model('Order', orderSchema);
+export default Order;

@@ -5,6 +5,7 @@ import productRouter from "./routes/productRoutes.js";
 import cartRouter from "./routes/cartRoutes.js";
 import userAuthRoute from "./routes/userRoutes.js";
 import addressRouter from "./routes/addressRoute.js"
+import orderRouter from "./routes/orderRoute.js";
 const app = express();
 const PORT = 5000; // Ensure this matches the port in app.listen
 
@@ -28,6 +29,7 @@ app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/auth", userAuthRoute);
 app.use("/api/addresses", addressRouter)
+app.use("/api/orders", orderRouter)
 app.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
 
 
