@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom";
 import { addItemToCart } from "../app/cartSlice";
 import Slider from '@mui/material/Slider';
 import axios from "axios";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Dimensions {
   length: number;
@@ -121,44 +123,57 @@ const handleSubmit =async () => {
     return <div>Product not found</div>;
     
   }
-const addDummyProductToCart = (productToAdd:Product) => {
+  const addProductToCart = (productToAdd: Product) => {
     const dummyCartData = {
       quantity: 1,
       product: productToAdd.id,  // Example Product ObjectId
-    
     };
-    console.log(productToAdd);
-    
   
     fetch("http://localhost:5000/api/cart/add", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-
         Authorization: `Bearer ${localStorage.getItem("token")}`, // Example JWT token from local storage
       },
       body: JSON.stringify(dummyCartData),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to add product to cart');
+        }
+        return response.json();
+      })
       .then((data) => {
         console.log("Cart Updated:", data);
         dispatch(addItemToCart(data));
+  
+        // Success toast
+        toast.success("Product added to cart successfully!", {
+          position: 'top-right',
+        });
       })
       .catch((error) => {
         console.error("Error adding product to cart:", error);
+  
+        // Error toast
+        toast.error("Failed to add product to cart. Please try again.", {
+          position: 'top-right',
+        });
       });
   };
+  
+  
 
   return (
     <div className="font-sans bg-white" style={{ zIndex: -1 }}>
       <div className="p-4 lg:max-w-7xl max-w-4xl mx-auto">
         <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg">
           <div className="lg:col-span-3 w-full lg:sticky top-0 text-center">
-            <div className="px-4 py-10 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative">
+            <div className="px-3 py-10 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative">
             <img style={{ zIndex: -1 }}
   src={largeImage !== null ? largeImage : undefined}
   alt="Product"
-  className="w-3/4 rounded object-cover mx-auto"
+  className="w-72 h-72 rounded object-cover mx-auto"
 />
               <button type="button" className="absolute top-4 right-4">
                 <svg
@@ -291,7 +306,7 @@ const addDummyProductToCart = (productToAdd:Product) => {
               <button
                 type="button"
                 className="min-w-[200px] px-4 py-2.5 border border-blue-600 bg-transparent hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded"
-              onClick={()=>addDummyProductToCart(product)}
+              onClick={()=>addProductToCart(product)}
               >
 
                 Add to cart
@@ -558,6 +573,8 @@ const addDummyProductToCart = (productToAdd:Product) => {
           </div>
         </div>
       </div>
+      <ToastContainer />
+
     </div>
   );
 };
