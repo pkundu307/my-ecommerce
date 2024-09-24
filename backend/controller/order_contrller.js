@@ -27,7 +27,7 @@ export const createOrder = async (req, res) => {
 // Get all orders for a user
 export const getUserOrders = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const {id} = req.user;
     const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
     return res.status(200).json(orders);
   } catch (error) {

@@ -1,8 +1,9 @@
-// src/OrderPage.tsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
 import { fetchAddresses } from "../app/addressSlice";
+import { ToastContainer, toast } from "react-toastify"; // Import Toastify
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const OrderPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -33,12 +34,20 @@ const OrderPage: React.FC = () => {
     setSelectedAddress(event.target.value);
     console.log(selectedAddress);
   };
-  const [paymentMethod, setPaymentMethod] = useState<string>("creditCard");
-
-  const totalAmount = cart.reduce(
+  const [paymentMethod, setPaymentMethod] = useState<string | undefined>(
+    undefined
+  );
+  const [couponCode, setCouponCode] = useState<string>("");
+  const [discount, setDiscount] = useState<number>(0);
+  
+  const totalAmountBeforeDiscount = cart.reduce(
     (acc, item) => acc + item.product.price * item.quantity,
     0
   );
+
+  const totalAmount = totalAmountBeforeDiscount - discount;
+
+
 
   const handlePaymentMethodChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -47,11 +56,26 @@ const OrderPage: React.FC = () => {
   };
 
   const handlePlaceOrder = async () => {
+    // Validate the selected address and payment method
+    if (!selectedAddress) {
+      toast.error("Please select an address before placing the order.", {
+        position: "top-center", // Updated position
+      });
+      return;
+    }
+  
+    if (!paymentMethod) {
+      toast.error("Please select a payment method.", {
+        position: "top-center", // Updated position
+      });
+      return;
+    }
+  
     // Retrieve the token from localStorage
     const token = localStorage.getItem("token");
   
     // Map cart items to the required format
-    const items = cart.map(item => ({
+    const items = cart.map((item) => ({
       productId: item.product.id,
       quantity: item.quantity,
     }));
@@ -78,22 +102,46 @@ const OrderPage: React.FC = () => {
       // Check if the response is successful
       if (response.ok) {
         const data = await response.json();
+        toast.success("Order placed successfully!", {
+          position: "top-center", // Updated position
+        });
         console.log("Order placed successfully:", data);
         // Handle success (e.g., show confirmation, navigate to another page, etc.)
       } else {
         console.error("Error placing order:", response.statusText);
-        // Handle error (e.g., show error message to the user)
+        toast.error("Failed to place order. Please try again.", {
+          position: "top-center", // Updated position
+        });
       }
     } catch (error) {
       console.error("Request failed:", error);
-      // Handle request failure (e.g., network error)
+      toast.error("Request failed. Please check your network and try again.", {
+        position: "top-center", // Updated position
+      });
     }
   };
   
+  const handleApplyCoupon = () => {
+    // Example logic for applying coupon
+    if (couponCode === "SAVE10") {
+      setDiscount(totalAmountBeforeDiscount * 0.1); 
+      toast.success("Coupon applied! 10% discount", {
+        position: "top-center",
+      });
+    } else {
+      setDiscount(0);
+      toast.error("Invalid coupon code.", {
+        position: "top-center",
+      });
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h1 className="text-4xl font-bold mb-6 text-indigo-600">Order Summary</h1>
+
+      {/* Toast Container for showing Toast notifications */}
+      <ToastContainer />
 
       <div className="mb-6">
         <h2 className="text-3xl font-semibold mb-4 text-gray-800">Products</h2>
@@ -102,7 +150,7 @@ const OrderPage: React.FC = () => {
             <tr className="text-left border-b bg-gray-100">
               <th className="px-4 py-2 text-lg font-semibold text-gray-800"></th>
               <th className="px-4 py-2 text-lg font-semibold text-gray-800">
-                product
+                Product
               </th>
               <th className="px-4 py-2 text-lg font-semibold text-gray-800">
                 Quantity
@@ -152,6 +200,23 @@ const OrderPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="mb-6 mt-4">
+        <h2 className="text-3xl font-semibold mb-4 text-gray-800">Coupon</h2>
+        <input
+          type="text"
+          value={couponCode}
+          onChange={(e) => setCouponCode(e.target.value)}
+          placeholder="Enter coupon code"
+          className="p-2 w-full border rounded-md shadow-sm"
+        />
+        <button
+          onClick={handleApplyCoupon}
+          className="mt-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200 ease-in-out"
+        >
+          Apply Coupon
+        </button>
+      </div>
+
       <div className="p-4 bg-gray-100 rounded-md">
         <h2 className="text-lg font-bold mb-4 text-gray-800">
           Select an Address
@@ -169,21 +234,20 @@ const OrderPage: React.FC = () => {
               Address
             </label>
             <select
-  id="addressDropdown"
-  value={selectedAddress || ""}
-  onChange={handleSelectChange}
-  className="block w-full p-2 border border-gray-300 rounded-md bg-white shadow-sm hover:border-indigo-500 transition duration-200 ease-in-out"
->
-  <option value="" disabled>
-    -- Select an Address --
-  </option>
-  {addresses.map((address) => (
-    <option key={address._id} value={address._id}>
-      {`${address.street}, ${address.city}, ${address.state}, ${address.country} - ${address.postalCode}`}
-    </option>
-  ))}
-</select>
-
+              id="addressDropdown"
+              value={selectedAddress || ""}
+              onChange={handleSelectChange}
+              className="block w-full p-2 border border-gray-300 rounded-md bg-white shadow-sm hover:border-indigo-500 transition duration-200 ease-in-out"
+            >
+              <option value="" disabled>
+                -- Select an Address --
+              </option>
+              {addresses.map((address) => (
+                <option key={address._id} value={address._id}>
+                  {`${address.street}, ${address.city}, ${address.state}, ${address.country} - ${address.postalCode}`}
+                </option>
+              ))}
+            </select>
 
             {selectedAddress && (
               <div className="mt-4">
@@ -230,15 +294,18 @@ const OrderPage: React.FC = () => {
           onChange={handlePaymentMethodChange}
           className="border p-2 w-full rounded-md bg-white shadow-sm hover:border-indigo-500 transition duration-200 ease-in-out"
         >
-          <option value="creditCard">Credit Card</option>
-          <option value="paypal">PayPal</option>
-          <option value="bankTransfer">Bank Transfer</option>
+          <option value="" disabled selected>
+            Select a payment method
+          </option>
+ 
+          <option value="upi">UPI</option>
+          <option value="cod">Cash on Delivery</option>
         </select>
       </div>
 
       <button
         onClick={handlePlaceOrder}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded w-full mt-4 transition duration-200 ease-in-out"
+        className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 ease-in-out"
       >
         Place Order
       </button>
