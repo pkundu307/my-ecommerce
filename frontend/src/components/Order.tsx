@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
+import { clearCart, fetchCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
 import { fetchAddresses } from "../app/addressSlice";
 import { ToastContainer, toast } from "react-toastify"; // Import Toastify
+import { useNavigate } from "react-router-dom";
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const OrderPage: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector(selectCartItems);
   const [selectedAddress, setSelectedAddress] = useState<string | undefined>(
@@ -106,6 +108,8 @@ const OrderPage: React.FC = () => {
           position: "top-center", // Updated position
         });
         console.log("Order placed successfully:", data);
+        dispatch(clearCart());
+        navigate("/order-success", { state: { ...data } });
         // Handle success (e.g., show confirmation, navigate to another page, etc.)
       } else {
         console.error("Error placing order:", response.statusText);
@@ -297,9 +301,8 @@ const OrderPage: React.FC = () => {
           <option value="" disabled selected>
             Select a payment method
           </option>
- 
-          <option value="upi">UPI</option>
-          <option value="cod">Cash on Delivery</option>
+          <option value="online">UPI</option>
+          <option value="cash_on_delivery">Cash on Delivery</option>
         </select>
       </div>
 
