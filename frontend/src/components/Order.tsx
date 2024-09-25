@@ -1,12 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { clearCart, fetchCart, selectCartItems, selectCartStatus } from "../app/cartSlice";
+import {
+  clearCart,
+  fetchCart,
+  selectCartItems,
+  selectCartStatus,
+} from "../app/cartSlice";
 import { fetchAddresses } from "../app/addressSlice";
 import { ToastContainer, toast } from "react-toastify"; // Import Toastify
 import { useNavigate } from "react-router-dom";
-import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
+import { motion } from "framer-motion";
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 
 const OrderPage: React.FC = () => {
+  const [isOrder, setIsOrder] = useState(false);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+
+  const handleDragEnd = (_event: any, info: any) => {
+    if (info.point.x >= (sliderRef.current?.offsetWidth || 300) - 60) {
+      handlePlaceOrder();
+     
+    }
+  };
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector(selectCartItems);
@@ -41,15 +57,13 @@ const OrderPage: React.FC = () => {
   );
   const [couponCode, setCouponCode] = useState<string>("");
   const [discount, setDiscount] = useState<number>(0);
-  
+
   const totalAmountBeforeDiscount = cart.reduce(
     (acc, item) => acc + item.product.price * item.quantity,
     0
   );
 
   const totalAmount = totalAmountBeforeDiscount - discount;
-
-
 
   const handlePaymentMethodChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -65,23 +79,23 @@ const OrderPage: React.FC = () => {
       });
       return;
     }
-  
+
     if (!paymentMethod) {
       toast.error("Please select a payment method.", {
         position: "top-center", // Updated position
       });
       return;
     }
-  
+
     // Retrieve the token from localStorage
     const token = localStorage.getItem("token");
-  
+
     // Map cart items to the required format
     const items = cart.map((item) => ({
       productId: item.product.id,
       quantity: item.quantity,
     }));
-  
+
     // Construct the order payload
     const orderData = {
       items: items,
@@ -89,8 +103,9 @@ const OrderPage: React.FC = () => {
       paymentMethod: paymentMethod,
       totalAmount: totalAmount,
     };
-  
+
     try {
+      setIsOrder(true);
       // Send the POST request to the API
       const response = await fetch("http://localhost:5000/api/orders/new", {
         method: "POST",
@@ -100,7 +115,7 @@ const OrderPage: React.FC = () => {
         },
         body: JSON.stringify(orderData),
       });
-  
+
       // Check if the response is successful
       if (response.ok) {
         const data = await response.json();
@@ -124,11 +139,11 @@ const OrderPage: React.FC = () => {
       });
     }
   };
-  
+
   const handleApplyCoupon = () => {
     // Example logic for applying coupon
     if (couponCode === "SAVE10") {
-      setDiscount(totalAmountBeforeDiscount * 0.1); 
+      setDiscount(totalAmountBeforeDiscount * 0.1);
       toast.success("Coupon applied! 10% discount", {
         position: "top-center",
       });
@@ -149,50 +164,52 @@ const OrderPage: React.FC = () => {
 
       <div className="mb-6">
         <h2 className="text-3xl font-semibold mb-4 text-gray-800">Products</h2>
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="text-left border-b bg-gray-100">
-              <th className="px-4 py-2 text-lg font-semibold text-gray-800"></th>
-              <th className="px-4 py-2 text-lg font-semibold text-gray-800">
-                Product
-              </th>
-              <th className="px-4 py-2 text-lg font-semibold text-gray-800">
-                Quantity
-              </th>
-              <th className="px-4 py-2 text-lg font-semibold text-gray-800">
-                Price
-              </th>
-              <th className="px-4 py-2 text-lg font-semibold text-gray-800">
-                Total
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart.map((item) => (
-              <tr key={item.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-2">
-                  <div className="h-16 w-16">
-                    <img
-                      src={item.product.thumbnail || ""}
-                      className="w-full h-full object-cover rounded-lg shadow-sm"
-                      alt="Product Thumbnail"
-                    />
-                  </div>
-                </td>
-                <td className="px-4 py-2 text-gray-800 break-words max-w-xs">
-                  {item.product.title}
-                </td>
-                <td className="px-4 py-2 text-gray-600">{item.quantity}</td>
-                <td className="px-4 py-2 text-gray-600">
-                  ₹{item.product.price.toFixed(2)}
-                </td>
-                <td className="px-4 py-2 text-gray-600">
-                  ₹{(item.product.price * item.quantity).toFixed(2)}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-200">
+            <thead>
+              <tr className="text-left border-b bg-gray-100">
+                <th className="px-4 py-2 text-lg font-semibold text-gray-800"></th>
+                <th className="px-4 py-2 text-lg font-semibold text-gray-800">
+                  Product
+                </th>
+                <th className="px-4 py-2 text-lg font-semibold text-gray-800">
+                  Quantity
+                </th>
+                <th className="px-4 py-2 text-lg font-semibold text-gray-800">
+                  Price
+                </th>
+                <th className="px-4 py-2 text-lg font-semibold text-gray-800">
+                  Total
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {cart.map((item) => (
+                <tr key={item.id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-2">
+                    <div className="h-16 w-16">
+                      <img
+                        src={item.product.thumbnail || ""}
+                        className="w-full h-full object-cover rounded-lg shadow-sm"
+                        alt="Product Thumbnail"
+                      />
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 text-gray-800 break-words max-w-xs">
+                    {item.product.title}
+                  </td>
+                  <td className="px-4 py-2 text-gray-600">{item.quantity}</td>
+                  <td className="px-4 py-2 text-gray-600">
+                    ₹{item.product.price.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-gray-600">
+                    ₹{(item.product.price * item.quantity).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -247,7 +264,11 @@ const OrderPage: React.FC = () => {
                 -- Select an Address --
               </option>
               {addresses.map((address) => (
-                <option key={address._id} value={address._id}>
+                <option
+                  key={address._id}
+                  value={address._id}
+                  className="p-2 whitespace-nowrap overflow-hidden text-ellipsis"
+                >
                   {`${address.street}, ${address.city}, ${address.state}, ${address.country} - ${address.postalCode}`}
                 </option>
               ))}
@@ -306,12 +327,50 @@ const OrderPage: React.FC = () => {
         </select>
       </div>
 
-      <button
-        onClick={handlePlaceOrder}
-        className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 ease-in-out"
-      >
-        Place Order
-      </button>
+      <div className="flex justify-center items-center w-full">
+        <div className="relative w-screen max-w-sm bg-gradient-to-r from-gray-800 to-blue-600 p-4 rounded-2xl h-20 shadow-lg">
+          <div className="absolute inset-0 z-10 flex justify-center items-center pointer-events-none">
+            {!isOrder ? (
+              <span className="text-white font-semibold tracking-wider">
+                Slide to Pay
+              </span>
+            ) : (
+              <span className="text-white font-semibold tracking-wider">
+                Payment Complete
+              </span>
+            )}
+          </div>
+          {!isOrder && (
+            <motion.div
+              ref={sliderRef}
+              className="relative z-20 w-12 h-12 bg-white rounded-full cursor-pointer"
+              drag="x"
+              dragConstraints={{ left: 0, right: 240 }}
+              dragElastic={0.3}
+              onDragEnd={handleDragEnd}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="absolute inset-0 flex justify-center items-center">
+                <svg
+                  className="w-6 h-6 text-gray-700"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

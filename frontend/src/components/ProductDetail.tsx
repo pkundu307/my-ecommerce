@@ -156,7 +156,7 @@ const handleSubmit =async () => {
         console.error("Error adding product to cart:", error);
   
         // Error toast
-        toast.error("Failed to add product to cart. Please try again.", {
+        toast.error("Failed to add product to cart. (Already in cart).", {
           position: 'top-right',
         });
       });
