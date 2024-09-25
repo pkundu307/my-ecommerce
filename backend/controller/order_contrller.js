@@ -1,25 +1,53 @@
 import Order from "../models/order_entity.js";
+import User from "../models/user_entity.js";
+import Product from "../models/product/product_entity.js";
+import Address from "../models/address_entity.js";
 // Create a new order
 export const createOrder = async (req, res) => {
   try {
     const {id}= req.user;
-    const { items, totalAmount, paymentMethod, selectedAddress } = req.body;
-    console.log(items, totalAmount, paymentMethod, selectedAddress, id);
-    
-    // const order = new Order({
-    //   items,
-    //   totalAmount,
-    //   user,
-    //   paymentMethod,
-    //   selectedAddress,
-    //   discount,
-    //   taxAmount,
-    //   shippingFee,
-    // });
+    const { items, paymentMethod, selectedAddress } = req.body;
+    const user = await User.findById(id);
+    const address = await Address.findById(selectedAddress)
+    const finalAddress = address.street+","+address.city+','+address.state+","+address.postalCode+","+address.country;
+    // console.log(items, totalAmount, paymentMethod, selectedAddress, id);
+    let totalAmount = 0;
+    let shippingFee=0;
 
-    // const savedOrder = await order.save();
+    for (let item of items) {
+      const productId = item.productId;
+      const quantity = item.quantity;
+
+      // Find the product by its ID
+      const product = await Product.findById(productId);
+
+      if (!product) {
+        return res.status(404).json({ message: `Product with ID ${productId} not found.` });
+      }
+
+      // Multiply the price of the product by its quantity and add to totalAmount
+      totalAmount += product.price * quantity;
+    }
+
+
+    if(totalAmount<500){
+      shippingFee=40
+    }
+    
+    const order = new Order({
+      items,
+      totalAmount,
+      user,
+      paymentMethod,
+      selectedAddress:finalAddress,
+      shippingFee,
+    });
+
+    const savedOrder = await order.save();
     return res.status(201).json(savedOrder);
   } catch (error) {
+    console.log(error);
+    
     return res.status(500).json({ message: 'Error creating order', error });
   }
 };

@@ -12,7 +12,7 @@ const authenticate = async (req, res, next) => {
   try {
     // Verify the token using the secret
     const decodedToken = jwt.verify(token, 'prasanna');  // Ensure the secret matches the one used during signing
-    console.log(decodedToken,'aaaa');
+    // console.log(decodedToken,'aaaa');
     
     // Find the user based on the decoded token's userId
     const user = await User.findById(decodedToken.user);

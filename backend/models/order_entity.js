@@ -16,7 +16,7 @@ const orderSchema = new Schema(
     // Payment details
     paymentMethod: { 
       type: String, 
-      enum: ['credit_card', 'paypal', 'bank_transfer', 'cash_on_delivery'], 
+      enum: ['online', 'cash_on_delivery'], 
       required: true 
     },
     paymentStatus: { 
