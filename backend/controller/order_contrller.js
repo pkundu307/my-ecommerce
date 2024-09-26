@@ -55,13 +55,27 @@ export const createOrder = async (req, res) => {
 // Get all orders for a user
 export const getUserOrders = async (req, res) => {
   try {
-    const {id} = req.user;
-    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
+    const { id } = req.user; // Extract the user ID from the authenticated user
+    if (!id) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    // Fetch the user's orders, sorted by creation date (newest first), and populate product details
+    const orders = await Order.find({ user: id })
+      .sort({ createdAt: -1 })
+      .populate('items.productId', 'title price thumbnail'); // Populating relevant product fields
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: 'No orders found for this user' });
+    }
+
     return res.status(200).json(orders);
   } catch (error) {
-    return res.status(500).json({ message: 'Error fetching orders', error });
+    console.error('Error fetching orders:', error);
+    return res.status(500).json({ message: 'Error fetching orders', error: error.message });
   }
 };
+
 
 // Get an order by ID
 export const getOrderById = async (req, res) => {

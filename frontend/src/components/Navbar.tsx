@@ -355,6 +355,16 @@ function Navbar() {
                       </Link>
  
                        )}
+                          {user == null ? null : (
+                        <Link to="/orders">                     <a
+                        
+                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+                      >
+                        My Orders
+                      </a>
+                      </Link>
+ 
+                       )}
                       <a
                         href="#"
                         className="block px-4 py-2 text-gray-800 hover:bg-gray-200"

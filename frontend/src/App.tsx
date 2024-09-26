@@ -13,6 +13,7 @@ import { fetchCart, selectCartStatus } from './app/cartSlice';
 import OrderPage from './pages/OrderPage';
 import PaymentComponent from './components/Test';
 import OrderSuccess from './components/OrderSuccess';
+import MyOrder from './components/MyOrder';
 
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/order" element={<OrderPage/>} />
         <Route path="/order-success" element={<OrderSuccess />}  />
+        <Route path="/orders" element={<MyOrder />}  />
       </Routes>
       <Footer/>
 

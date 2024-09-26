@@ -11,6 +11,7 @@ import { ToastContainer, toast } from "react-toastify"; // Import Toastify
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
+import axios from "axios";
 
 const OrderPage: React.FC = () => {
   const [isOrder, setIsOrder] = useState(false);
@@ -122,10 +123,16 @@ const OrderPage: React.FC = () => {
         toast.success("Order placed successfully!", {
           position: "top-center", // Updated position
         });
-        console.log("Order placed successfully:", data);
+
+       await axios.put('http://localhost:5000/api/cart/clear', {}, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+   
         dispatch(clearCart());
         navigate("/order-success", { state: { ...data } });
-        // Handle success (e.g., show confirmation, navigate to another page, etc.)
+      
       } else {
         console.error("Error placing order:", response.statusText);
         toast.error("Failed to place order. Please try again.", {
