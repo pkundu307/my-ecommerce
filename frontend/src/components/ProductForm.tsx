@@ -23,11 +23,9 @@ const ProductForm: React.FC = () => {
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]); // For image previews
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null); // For thumbnail preview
-  const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File | null }>({
+  const [selectedFiles, setSelectedFiles] = useState<{ thumbnail: File | null, images: (File | null)[] }>({
     thumbnail: null,
-    image1: null,
-    image2: null,
-    image3: null,
+    images: [null, null, null], // For three image uploads
   });
 
   // Handle input changes for product details
@@ -39,24 +37,26 @@ const ProductForm: React.FC = () => {
   };
 
   // Handle image file selection and generate previews
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: 'thumbnail' | 'image1' | 'image2' | 'image3') => {
     if (e.target.files) {
       const file = e.target.files[0];
 
-      setSelectedFiles(prev => ({
-        ...prev,
-        [key]: file,
-      }));
-
-      const preview = URL.createObjectURL(file);
-
       if (key === 'thumbnail') {
-        setThumbnailPreview(preview);
+        setSelectedFiles(prev => ({
+          ...prev,
+          thumbnail: file,
+        }));
+        setThumbnailPreview(URL.createObjectURL(file));
       } else {
+        const imageIndex = Number(key.replace('image', '')) - 1;
+        setSelectedFiles(prev => {
+          const newImages = [...prev.images];
+          newImages[imageIndex] = file;
+          return { ...prev, images: newImages };
+        });
         setImagePreviews(prev => {
           const newPreviews = [...prev];
-          const index = Number(key.replace('image', '')) - 1;
-          newPreviews[index] = preview;
+          newPreviews[imageIndex] = URL.createObjectURL(file);
           return newPreviews;
         });
       }
@@ -80,12 +80,17 @@ const ProductForm: React.FC = () => {
     formData.append('stock', product.stock.toString());
     formData.append('brand', product.brand);
 
-    // Append images to form data
-    for (const [key, file] of Object.entries(selectedFiles)) {
-      if (file) {
-        formData.append(key, file, file.name);
-      }
+    // Append thumbnail to form data
+    if (selectedFiles.thumbnail) {
+      formData.append('thumbnail', selectedFiles.thumbnail, selectedFiles.thumbnail.name);
     }
+
+    // Append images to form data
+    selectedFiles.images.forEach((file, index) => {
+      if (file) {
+        formData.append(`images`, file, file.name); // Using the same key 'images' for all
+      }
+    });
 
     try {
       const response = await fetch('http://localhost:5000/api/product/add', {
@@ -270,12 +275,7 @@ const ProductForm: React.FC = () => {
           ))}
         </div>
 
-        <button
-          type="submit"
-          className="bg-blue-500 text-white p-2 rounded w-full sm:w-auto mt-4"
-        >
-          Add Product
-        </button>
+        <button type="submit" className="mt-4 bg-blue-500 text-white p-2 rounded">Submit</button>
       </form>
     </div>
   );

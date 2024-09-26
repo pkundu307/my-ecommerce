@@ -1,71 +1,57 @@
 import Product from '../models/product/product_entity.js';
 import Review from '../models/product/review_entity.js';
-import AWS from '@aws-sdk/client-s3';
-import Busboy from 'busboy';
 import NodeCache from 'node-cache';
 import User from '../models/user_entity.js';
 import { v4 as uuidv4 } from 'uuid';
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+import { uploadToS3 } from '../utils/s3.js';
 
 const cache = new NodeCache();
 // const cache = new NodeCache();
 // Add a new product
 export const addProduct = async (req, res) => {
-  const busboy = new Busboy({ headers: req.headers });
-  let productData = {};
-  let imageUploadPromises = [];
-  let imageCount = 0;
+  try {
+  
+    const { title, description, price, stock, brand, category } = req.body;
+    console.log(title, description, price, stock, category);
+    
+    let thumbnailUrl = '';
+    let imageUrls = [];
 
-  busboy.on('field', (fieldname, val) => {
-    productData[fieldname] = val; // Collect all other form fields
-  });
-
-  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-    if (imageCount < 3) {  // Ensure only 3 images are uploaded
-      const s3Key = `${productData.title}${imageCount + 1}-${uuidv4()}`;
-      const uploadParams = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: s3Key,
-        Body: file,
-        ContentType: mimetype,
-        ACL: 'public-read', // Makes image publicly accessible
-      };
-
-      // Push upload promises to handle them later
-      imageUploadPromises.push(
-        s3.upload(uploadParams).promise().then((data) => {
-          return data.Location; // Store the URL of the uploaded image
-        })
-      );
-
-      imageCount++;
-    } else {
-      file.resume(); // Ignore files after 3
+    // Upload thumbnail if provided
+    if (req.files?.thumbnail) {
+      const thumbnailFile = req.files.thumbnail;
+      const thumbnailFileName = title;
+      thumbnailUrl = await uploadToS3(thumbnailFile.data, thumbnailFileName);
     }
-  });
 
-  busboy.on('finish', async () => {
-    try {
-      // Wait for all images to be uploaded to S3
-      const imageUrls = await Promise.all(imageUploadPromises);
-      productData.images = imageUrls; // Assign image URLs to product data
-
-      // Create and save product
-      const product = new Product(productData);
-      await product.save();
-
-      res.status(201).json(product);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    // Upload additional images if provided
+    if (req.files?.images) {
+      const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+      for (const image of images) {
+        const imageFileName = `${uuidv4()}_${image.name}`;
+        const imageUrl = await uploadToS3(image.data, imageFileName);
+        imageUrls.push(imageUrl);
+      }
     }
-  });
 
-  req.pipe(busboy); // Pipe the incoming request to busboy
+    // Create product
+    const product = new Product({
+      title,
+      description,
+      price,
+      stock,
+      brand,
+      category,
+      thumbnail: thumbnailUrl,
+      images: imageUrls,
+    });
+
+    await product.save();
+    res.status(201).json(product);
+  } catch (error) {
+    console.error('Error creating product', error);
+    res.status(500).json({ message: 'Error creating product', error });
+  }
 };
 
 export const bulkInsertProducts = async (req, res) => {
@@ -84,10 +70,8 @@ export const bulkInsertProducts = async (req, res) => {
 export const getAllProducts = async (req, res) => {
   try {
     // Check if the products are already cached
-    const cachedProducts = cache.get('products');
-    if (cachedProducts) {
-      return res.status(200).json(cachedProducts);
-    }
+    
+
 
     // Fetch products if not cached
     const products = await Product.find({ deleted: false })
@@ -121,18 +105,50 @@ export const getProductById = async (req, res) => {
 // Update a product by ID
 export const updateProduct = async (req, res) => {
   try {
-    cache.del('products');
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!product || product.deleted) {
-      return res.status(404).json({ error: "Product not found" });
+    const { productId } = req.params;
+    const { title, description, price, stock, brand, category } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    let thumbnailUrl = product.thumbnail;
+    let imageUrls = product.images;
+
+    // Upload new thumbnail if provided
+    if (req.files?.thumbnail) {
+      const thumbnailFile = req.files.thumbnail;
+      const thumbnailFileName = `${uuidv4()}_${thumbnailFile.name}`;
+      thumbnailUrl = await uploadToS3(thumbnailFile.data, thumbnailFileName);
+    }
+
+    // Upload new images if provided
+    if (req.files?.images) {
+      imageUrls = []; // Reset the images array
+      const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+      for (const image of images) {
+        const imageFileName = `${uuidv4()}_${image.name}`;
+        const imageUrl = await uploadToS3(image.data, imageFileName);
+        imageUrls.push(imageUrl);
+      }
+    }
+
+    // Update product fields
+    product.title = title || product.title;
+    product.description = description || product.description;
+    product.price = price || product.price;
+    product.stock = stock || product.stock;
+    product.brand = brand || product.brand;
+    product.category = category || product.category;
+    product.thumbnail = thumbnailUrl;
+    product.images = imageUrls;
+
+    await product.save();
     res.status(200).json(product);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error updating product', error);
+    res.status(500).json({ message: 'Error updating product', error });
   }
 };
 
