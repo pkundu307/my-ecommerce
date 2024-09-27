@@ -2,6 +2,15 @@ import Order from "../models/order_entity.js";
 import User from "../models/user_entity.js";
 import Product from "../models/product/product_entity.js";
 import Address from "../models/address_entity.js";
+
+import Razorpay from 'razorpay'
+import orderInitiate from "../models/orderInstantiate_entity.js";
+
+
+const instance = new Razorpay({
+  key_id: 'rzp_test_izwrHraJQ0vHKp',
+  key_secret: 'Og05QZlM8fwxbNrsiF1kcc6o',
+})
 // Create a new order
 export const createOrder = async (req, res) => {
   try {
@@ -33,6 +42,10 @@ export const createOrder = async (req, res) => {
     if(totalAmount<500){
       shippingFee=40
     }
+    totalAmount = totalAmount+shippingFee;
+
+    
+
     
     const order = new Order({
       items,
@@ -123,5 +136,70 @@ export const deleteOrder = async (req, res) => {
     return res.status(200).json({ message: 'Order deleted successfully' });
   } catch (error) {
     return res.status(500).json({ message: 'Error deleting order', error });
+  }
+};
+// send key 
+export const getKey = async (req, res) => {
+  return res.status(200).json({ key:"rzp_test_izwrHraJQ0vHKp"})
+}
+
+// generate order instance
+
+export const createOnlineOrder = async (req, res) => {
+  try {
+    const { id } = req.user;
+    console.log(id, 'id');
+
+    const { items } = req.body;
+    let totalAmount = 0;
+    let shippingFee = 0;
+    
+    for (let item of items) {
+      const productId = item.productId;
+      const quantity = item.quantity;
+
+      // Find the product by its ID
+      const product = await Product.findById(productId);
+
+      if (!product) {
+        return res.status(404).json({ message: `Product with ID ${productId} not found.` });
+      }
+
+      // Multiply the price of the product by its quantity and add to totalAmount
+      totalAmount += product.price * quantity;
+    }
+
+    // Add shipping fee if the total amount is less than 500
+    if (totalAmount < 500) {
+      shippingFee = 40;
+    }
+    totalAmount = totalAmount + shippingFee;
+
+    console.log('Total Amount:', totalAmount);
+
+    // Creating order with Razorpay or other payment gateway
+    const options = {
+      amount: Number(totalAmount) * 100, // Razorpay requires amount in paise (for INR)
+      currency: "INR",
+    };
+
+    const order = await instance.orders.create(options); // Make sure 'instance' is initialized correctly for Razorpay
+
+    console.log('Order created with payment gateway:', order);
+
+    // Save order initiation details in your database
+    const orderInst = await orderInitiate.create({
+      order_id: order.id,
+      userId: id,
+      status: "pending", // Status should be a string
+    });
+
+    console.log('Order saved in DB:', orderInst);
+
+    // Send response with the order details
+    res.status(200).json({ order });
+  } catch (error) {
+    console.error('Error in creating order:', error);
+    return res.status(500).json({ message: 'Error creating order', error });
   }
 };

@@ -2,7 +2,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // Configure AWS S3
 const s3 = new S3Client({
-  region: '',
+  region: 'a',
   credentials: {
     accessKeyId: '',
     secretAccessKey: '',

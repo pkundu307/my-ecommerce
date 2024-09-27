@@ -76,76 +76,122 @@ const OrderPage: React.FC = () => {
     // Validate the selected address and payment method
     if (!selectedAddress) {
       toast.error("Please select an address before placing the order.", {
-        position: "top-center", // Updated position
+        position: "top-center",
       });
       return;
     }
-
+  
     if (!paymentMethod) {
       toast.error("Please select a payment method.", {
-        position: "top-center", // Updated position
+        position: "top-center",
       });
       return;
     }
-
+  
     // Retrieve the token from localStorage
     const token = localStorage.getItem("token");
-
+  
     // Map cart items to the required format
     const items = cart.map((item) => ({
       productId: item.product.id,
       quantity: item.quantity,
     }));
-
-    // Construct the order payload
+  
     const orderData = {
-      items: items,
-      selectedAddress: selectedAddress,
-      paymentMethod: paymentMethod,
-      totalAmount: totalAmount,
+      items,
+      selectedAddress,
+      paymentMethod,
+      totalAmount,
     };
-
+  
     try {
       setIsOrder(true);
-      // Send the POST request to the API
-      const response = await fetch("http://localhost:5000/api/orders/new", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include token in Bearer authorization
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      // Check if the response is successful
-      if (response.ok) {
-        const data = await response.json();
-        toast.success("Order placed successfully!", {
-          position: "top-center", // Updated position
-        });
-
-       await axios.put('http://localhost:5000/api/cart/clear', {}, {
+  
+      if (paymentMethod === "online") {
+        // Logic for online payment
+        toast.info("Redirecting to online payment...");
+        
+        // Assuming you integrate with an online payment provider (e.g., Stripe or Razorpay)
+        const paymentResponse = await initiateOnlinePayment(orderData);
+  
+        if (paymentResponse.success) {
+          // Handle order placement after successful online payment
+          const response = await fetch("http://localhost:5000/api/orders/new", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(orderData),
+          });
+  
+          if (response.ok) {
+            const data = await response.json();
+            toast.success("Online payment completed. Order placed successfully!", {
+              position: "top-center",
+            });
+  
+            // Clear the cart after placing the order
+            await axios.put('http://localhost:5000/api/cart/clear', {}, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            dispatch(clearCart());
+            navigate("/order-success", { state: { ...data } });
+          } else {
+            throw new Error("Order placement failed after payment.");
+          }
+        } else {
+          toast.error("Online payment failed. Please try again.", {
+            position: "top-center",
+          });
+        }
+  
+      } else if (paymentMethod === "cash_on_delivery") {
+        // Existing logic for cash on delivery
+        const response = await fetch("http://localhost:5000/api/orders/new", {
+          method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify(orderData),
         });
-   
-        dispatch(clearCart());
-        navigate("/order-success", { state: { ...data } });
-      
-      } else {
-        console.error("Error placing order:", response.statusText);
-        toast.error("Failed to place order. Please try again.", {
-          position: "top-center", // Updated position
-        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          toast.success("Order placed successfully!", {
+            position: "top-center",
+          });
+  
+          // Clear the cart after placing the order
+          await axios.put('http://localhost:5000/api/cart/clear', {}, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          dispatch(clearCart());
+          navigate("/order-success", { state: { ...data } });
+        } else {
+          throw new Error("Order placement failed.");
+        }
       }
     } catch (error) {
       console.error("Request failed:", error);
       toast.error("Request failed. Please check your network and try again.", {
-        position: "top-center", // Updated position
+        position: "top-center",
       });
     }
   };
+  
+  // Dummy function to represent the online payment flow
+  const initiateOnlinePayment = async (orderData) => {
+    const { data: { key } } = await axios.get('http://localhost:5000/api/orders/getkey', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+
+
+
+    console.log(key,orderData);
+    
+    return { success: false };
+  };
+  
 
   const handleApplyCoupon = () => {
     // Example logic for applying coupon
@@ -329,7 +375,7 @@ const OrderPage: React.FC = () => {
           <option value="" disabled selected>
             Select a payment method
           </option>
-          <option value="online">UPI</option>
+          <option value="online">UPI/CREDIT CARD/DEBIT CARD/BANK TRANSFER</option>
           <option value="cash_on_delivery">Cash on Delivery</option>
         </select>
       </div>
