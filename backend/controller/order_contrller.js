@@ -8,8 +8,12 @@ import orderInitiate from "../models/orderInstantiate_entity.js";
 
 
 const instance = new Razorpay({
-  key_id: 'rzp_test_izwrHraJQ0vHKp',
-  key_secret: 'Og05QZlM8fwxbNrsiF1kcc6o',
+  key_id:'' 
+  // 'rzp_test_izwrHraJQ0vHKp'
+  ,
+  key_secret: ''
+  // 'Og05QZlM8fwxbNrsiF1kcc6o'
+  ,
 })
 // Create a new order
 export const createOrder = async (req, res) => {
