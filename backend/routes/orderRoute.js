@@ -6,7 +6,8 @@ import {
   updateOrderStatus, 
   deleteOrder, 
   getKey,
-  createOnlineOrder
+  createOnlineOrder,
+  verifyOrder
 } from '../controller/order_contrller.js'; // Use .js extension with ES modules
 import authenticate from '../middlewares/auth.js';
 
@@ -19,4 +20,5 @@ router.put('/orders/:id', updateOrderStatus);
 router.delete('/orders/:id', deleteOrder);
 router.get('/getkey',authenticate,getKey)
 router.post('/onlinepay',authenticate,createOnlineOrder)
+router.post('/paymentverification',verifyOrder)
 export default router;

@@ -113,6 +113,8 @@ const OrderPage: React.FC = () => {
         
         // Assuming you integrate with an online payment provider (e.g., Stripe or Razorpay)
         const paymentResponse = await initiateOnlinePayment(orderData);
+        console.log('98989898',paymentResponse.success);
+        
   
         if (paymentResponse.success) {
           // Handle order placement after successful online payment
@@ -122,7 +124,7 @@ const OrderPage: React.FC = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(orderData),
+            body: JSON.stringify({...orderData,paymentStatus:"completed"}),
           });
   
           if (response.ok) {
@@ -182,15 +184,74 @@ const OrderPage: React.FC = () => {
   };
   
   // Dummy function to represent the online payment flow
-  const initiateOnlinePayment = async (orderData) => {
-    const { data: { key } } = await axios.get('http://localhost:5000/api/orders/getkey', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-
-
-
-    console.log(key,orderData);
-    
-    return { success: false };
+  const initiateOnlinePayment = async (orderData: unknown) => {
+    try {
+      // Fetch the key for Razorpay
+      const { data: { key } } = await axios.get('http://localhost:5000/api/orders/getkey', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+  
+      // Create the order on your backend
+      const { data: { order, user } } = await axios.post(
+        "http://localhost:5000/api/orders/onlinepay",
+        orderData, // Pass orderData as the body of the request
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+  
+      // Create Razorpay options
+      const options = {
+        key,
+        amount: order.amount,
+        currency: "INR",
+        name: "lootlo",
+        description: "Razorpay tutorial",
+        image: "https://builtin.com/sites/www.builtin.com/files/styles/og/public/2022-09/ecommerce.png",
+        order_id: order.id,
+        callback_url: "http://localhost:5000/api/orders/paymentverification",
+        prefill: {
+          name: user.name,
+          email: user.email,
+        },
+        notes: {
+          "address": "Razorpay official"
+        },
+        theme: {
+          color: "#67eb34"
+        },
+      };
+  
+      return new Promise((resolve, reject) => {
+        // Initialize Razorpay instance
+        const razor = new window.Razorpay({
+          ...options,
+          handler: (response: any) => {
+            // Handle success callback when payment is completed
+            console.log("Payment successful:", response);
+            resolve({ success: true, order, paymentResponse: response });
+          },
+          modal: {
+            ondismiss: () => {
+              // Handle when user dismisses the payment modal
+              console.log("Payment dismissed by user");
+              setIsOrder(false);
+              window.location.reload();
+              reject({ success: false, message: "Payment dismissed by user" });
+            }
+          }
+        });
+  
+        // Open the Razorpay payment modal
+        razor.open();
+      });
+  
+    } catch (error) {
+      console.error("Error initiating online payment:", error);
+      return { success: false, error: error.message }; // Return failure in case of an error
+    }
   };
+  
   
 
   const handleApplyCoupon = () => {

@@ -8,18 +8,14 @@ import orderInitiate from "../models/orderInstantiate_entity.js";
 
 
 const instance = new Razorpay({
-  key_id:'' 
-  // 'rzp_test_izwrHraJQ0vHKp'
-  ,
-  key_secret: ''
-  // 'Og05QZlM8fwxbNrsiF1kcc6o'
-  ,
+  key_id: 'rzp_test_izwrHraJQ0vHKp',
+  key_secret: 'Og05QZlM8fwxbNrsiF1kcc6o',
 })
 // Create a new order
 export const createOrder = async (req, res) => {
   try {
     const {id}= req.user;
-    const { items, paymentMethod, selectedAddress } = req.body;
+    const { items, paymentMethod, selectedAddress, paymentStatus } = req.body;
     const user = await User.findById(id);
     const address = await Address.findById(selectedAddress)
     const finalAddress = address.street+","+address.city+','+address.state+","+address.postalCode+","+address.country;
@@ -57,6 +53,7 @@ export const createOrder = async (req, res) => {
       user,
       paymentMethod,
       selectedAddress:finalAddress,
+      paymentStatus:paymentStatus?paymentStatus:"pending",
       shippingFee,
     });
 
@@ -152,7 +149,8 @@ export const getKey = async (req, res) => {
 export const createOnlineOrder = async (req, res) => {
   try {
     const { id } = req.user;
-    console.log(id, 'id');
+    const user =await User.findById(id);
+    console.log(id,user, 'id');
 
     const { items } = req.body;
     let totalAmount = 0;
@@ -201,9 +199,42 @@ export const createOnlineOrder = async (req, res) => {
     console.log('Order saved in DB:', orderInst);
 
     // Send response with the order details
-    res.status(200).json({ order });
+    res.status(200).json({ order,user });
   } catch (error) {
     console.error('Error in creating order:', error);
     return res.status(500).json({ message: 'Error creating order', error });
   }
 };
+
+//verify order
+
+export const verifyOrder = async (req, res) => {
+  try {
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    const expectedSign = crypto.createHmac("sha256", process.env.RAZORPAY_SECRET)
+    .update(sign.toString())
+    .digest("hex");
+
+// console.log(razorpay_signature === expectedSign);
+
+// Create isAuthentic
+const isAuthentic = expectedSign === razorpay_signature;
+
+if (isAuthentic) {
+ const oldRecord = await orderInitiate.find({order_id:razorpay_order_id})
+ console.log(oldRecord,'oldRecord');
+ 
+ oldRecord.status = "completed";
+ await oldRecord.save();
+ res.status(200).json({ message: "Payment successful",paymentStatus: "completed" });
+}
+
+
+res.status(200).json({ message: "Payment unsuccessful",paymentStatus: "pending" });
+   
+  } catch (error) { 
+    
+    console.error('Error in verifying order:', error);
+    return res.status(500).json({ message: 'Error verifying order', error });
+  }
+}
