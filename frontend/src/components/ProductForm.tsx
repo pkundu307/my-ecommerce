@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '../app/types';
-
+import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
+import 'react-toastify/dist/ReactToastify.css'; 
 const ProductForm: React.FC = () => {
   const [product, setProduct] = useState<Product>({
     _id: '',  // Default _id field
@@ -107,7 +108,14 @@ const ProductForm: React.FC = () => {
 
       const data = await response.json();
       console.log('Product added:', data);
+      toast.success('Product added successfully!'); // Show success notification
+
+      setThumbnailPreview(null);
+      setImagePreviews([]);
+      setSelectedFiles({ thumbnail: null, images: [null, null, null] });
     } catch (error) {
+      toast.error('Error adding product'); // Show error notification
+
       console.error('Error:', error);
     }
   };
@@ -277,6 +285,7 @@ const ProductForm: React.FC = () => {
 
         <button type="submit" className="mt-4 bg-blue-500 text-white p-2 rounded">Submit</button>
       </form>
+      <ToastContainer />
     </div>
   );
 };

@@ -9,6 +9,8 @@ import searchIcon from "../images/search.png";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser, setUser } from "../app/userSlice";
 import { RootState } from "../app/types";
+import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
+import 'react-toastify/dist/ReactToastify.css'; 
 interface GoogleOAuthResponse {
   credential: string;
   clientId: string;
@@ -100,7 +102,7 @@ function Navbar() {
       // Extract the user and token from the response
       const { user, token } = response.data;
       console.log(user);
-
+      toast.success("Login success")
       // Store user information and JWT token separately
       localStorage.setItem("user", JSON.stringify(user)); // Store the user object (including picture) as a string
       localStorage.setItem("token", token); // Store the JWT token
@@ -108,6 +110,7 @@ function Navbar() {
       // Dispatch the user data to Redux store
       dispatch(setUser(user));
       setLoginPopupOpen(false)
+      setDropdownOpen(false)
       console.log("Login Success:", response.data);
     } catch (error) {
       console.error("Error during login:", error);
@@ -143,7 +146,7 @@ function Navbar() {
   className="w-full container mx-auto flex items-center justify-between bg-slate-300 p-5"
   style={{ zIndex: 1, position: 'sticky', top: 0 }}
 >
-
+<ToastContainer/>
           <div className="container mx-auto flex justify-between items-center">
             {/* Left Section: Logo and Search Bar */}
             <div className="flex items-center space-x-4">

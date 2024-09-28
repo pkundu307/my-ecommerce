@@ -14,6 +14,7 @@ import OrderPage from './pages/OrderPage';
 import PaymentComponent from './components/Test';
 import OrderSuccess from './components/OrderSuccess';
 import MyOrder from './components/MyOrder';
+import ProductForm from './components/ProductForm';
 
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
         <Route path="/order" element={<OrderPage/>} />
         <Route path="/order-success" element={<OrderSuccess />}  />
         <Route path="/orders" element={<MyOrder />}  />
+        <Route path="/addproduct" element={<ProductForm />}  />
       </Routes>
       <Footer/>
 

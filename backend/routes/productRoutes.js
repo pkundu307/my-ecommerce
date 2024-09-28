@@ -1,8 +1,12 @@
 import { addProduct, getAllProducts, getProductById, updateProduct, deleteProduct, searchProductsByName, bulkInsertProducts, addReview, getReviewsByProductId } from '../controller/product_controller.js';
 import express from 'express';
 import authenticate from '../middlewares/auth.js';
+import fileUpload from 'express-fileupload';
 
 const router = express.Router();
+
+// Enable file upload middleware
+router.use(fileUpload());
 
 // Define product-related routes
 router.post('/add',authenticate, addProduct);

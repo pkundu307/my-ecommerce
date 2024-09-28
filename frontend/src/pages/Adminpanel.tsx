@@ -54,7 +54,7 @@ const widgets: Widget[] = [
     gradient: ["#ADFF2F", "#9ACD32"],
     icon: "warehouse",
     stat: "In Stock",
-    to: "/inventory",
+    to: "/addproduct",
     linkText: "View Inventory",
     isActive: true,
   },
