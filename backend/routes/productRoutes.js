@@ -18,5 +18,7 @@ router.post('/products/bulk', bulkInsertProducts); // Add route for bulk insert
 router.get('/product/:id', getProductById);
 router.post('/addreview/:id',authenticate, addReview);
 router.get('/getreview/:id', getReviewsByProductId)
+router.get('/search', searchProductsByName);
+
 
 export default router;

@@ -176,8 +176,13 @@ export const searchProductsByName = async (req, res) => {
     const products = await Product.find({
       title: { $regex: `^${name}`, $options: "i" },
       deleted: false
-    });
-    res.status(200).json(products);
+    }).select('title thumbnail'); // Select only title and thumbnail fields
+
+    res.status(200).json(products.map(product => ({
+      id: product.id,         // Virtual 'id' field
+      title: product.title,
+      thumbnail: product.thumbnail
+    })));
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

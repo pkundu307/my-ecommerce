@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect, ChangeEvent } from "react";
 import axios from "axios";
 import profile from "../images/profile.jpg";
 import cart from "../images/cart.jpg";
@@ -9,14 +9,57 @@ import searchIcon from "../images/search.png";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser, setUser } from "../app/userSlice";
 import { RootState } from "../app/types";
-import { ToastContainer, toast } from 'react-toastify'; // Import react-toastify
-import 'react-toastify/dist/ReactToastify.css'; 
+import { ToastContainer, toast } from "react-toastify"; // Import react-toastify
+import "react-toastify/dist/ReactToastify.css";
 interface GoogleOAuthResponse {
   credential: string;
   clientId: string;
 }
+interface Product {
+  id: string;
+  title: string;
+  thumbnail: string;
+}
 
 function Navbar() {
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
+  const [results, setResults] = useState<Product[]>([]);
+
+  // Debounce effect
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm); // Update after debounce delay
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      clearTimeout(handler); // Clean up timeout on each change
+    };
+  }, [searchTerm]);
+
+  // Fetch results after debounce
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (debouncedSearchTerm&&debouncedSearchTerm!="") {
+        try {
+          const response = await axios.get<Product[]>(
+            `http://localhost:5000/api/product/search?name=${debouncedSearchTerm}`
+          );
+          setResults(response.data);
+        } catch (error) {
+          console.error('Error fetching search results', error);
+        }
+      }
+    };
+
+    fetchResults();
+  }, [debouncedSearchTerm]);
+
+  // Handle input change
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   const data: number = useSelector(
     (state: RootState) => state.cart.items.length
   );
@@ -43,7 +86,6 @@ function Navbar() {
     setLoginPopupOpen(true);
     setDropdownOpen(false); // Optionally close the dropdown
   };
- 
 
   const closeLoginPopup = () => {
     setLoginPopupOpen(false);
@@ -59,17 +101,23 @@ function Navbar() {
       let response;
       if (isLoginView) {
         // Login logic
-        response = await axios.post<{ token: string }>("http://localhost:5000/api/auth/login", {
-          email,
-          password,
-        });
+        response = await axios.post<{ token: string }>(
+          "http://localhost:5000/api/auth/login",
+          {
+            email,
+            password,
+          }
+        );
       } else {
         // Sign-up logic
-        response = await axios.post<{ token: string }>("http://localhost:5000/api/auth/signup", {
-          email,
-          password,
-          name: email, // Assuming name is the same as email for simplicity
-        });
+        response = await axios.post<{ token: string }>(
+          "http://localhost:5000/api/auth/signup",
+          {
+            email,
+            password,
+            name: email, // Assuming name is the same as email for simplicity
+          }
+        );
       }
 
       // Store JWT token in localStorage
@@ -102,15 +150,15 @@ function Navbar() {
       // Extract the user and token from the response
       const { user, token } = response.data;
       console.log(user);
-      toast.success("Login success")
+      toast.success("Login success");
       // Store user information and JWT token separately
       localStorage.setItem("user", JSON.stringify(user)); // Store the user object (including picture) as a string
       localStorage.setItem("token", token); // Store the JWT token
 
       // Dispatch the user data to Redux store
       dispatch(setUser(user));
-      setLoginPopupOpen(false)
-      setDropdownOpen(false)
+      setLoginPopupOpen(false);
+      setDropdownOpen(false);
       console.log("Login Success:", response.data);
     } catch (error) {
       console.error("Error during login:", error);
@@ -130,8 +178,8 @@ function Navbar() {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     dispatch(clearUser());
-    setLoginPopupOpen(false)
-    setDropdownOpen(false)
+    setLoginPopupOpen(false);
+    setDropdownOpen(false);
   };
 
   const handleGoogleLoginFailure = (error: Error) => {
@@ -143,10 +191,10 @@ function Navbar() {
       <GoogleOAuthProvider clientId="939883123761-up76q4mal36sd3quh558ssccr1cqc035.apps.googleusercontent.com">
         {/* <div className="max-w-screen-lg container mx-auto flex items-center justify-between bg-slate-400 p-5"> */}
         <nav
-  className="w-full container mx-auto flex items-center justify-between bg-slate-300 p-5"
-  style={{ zIndex: 1, position: 'sticky', top: 0 }}
->
-<ToastContainer/>
+          className="w-full container mx-auto flex items-center justify-between bg-slate-300 p-5"
+          style={{ zIndex: 1, position: "sticky", top: 0 }}
+        >
+          <ToastContainer />
           <div className="container mx-auto flex justify-between items-center">
             {/* Left Section: Logo and Search Bar */}
             <div className="flex items-center space-x-4">
@@ -156,21 +204,50 @@ function Navbar() {
               </div>
 
               {/* Search Bar */}
-              <div className="flex items-center bg-gray-200 rounded-md hidden md:flex">
-                <input
-                  type="text"
-                  placeholder="🔍 Search"
-                  className="rounded-md px-2 py-1 bg-gray-200 focus:outline-none w-64"
-                />
-                {/* Search Icon */}
-                <button className="bg-cyan-600 border-b-gray-800 rounded-md p-2">
-                  <img
-                    src={searchIcon}
-                    alt="Search"
-                    className="rounded-full h-8 w-8"
-                  />
-                </button>
-              </div>
+              <div className="p-4">
+{/* Search input and results */}
+<div className="relative">
+  <div className="flex items-center bg-gray-200 rounded-md">
+    <input
+      type="text"
+      placeholder="🔍 Search"
+      className="rounded-md px-2 py-1 bg-gray-200 focus:outline-none w-64"
+      value={searchTerm}
+      onChange={handleInputChange} // Handle search term change
+    />
+    <button className="bg-cyan-600 border-b-gray-800 rounded-md p-2">
+      <img
+        src={searchIcon}
+        alt="Search"
+        className="rounded-full h-8 w-8"
+      />
+    </button>
+  </div>
+
+  {/* Search results - vertical list with z-index */}
+  {results.length > 0 && (
+    <div className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg z-50">
+      <ul className="flex flex-col divide-y divide-gray-200">
+        {results.map((product) => (
+          <li
+            key={product.id}
+            className="p-4 hover:bg-gray-100 flex items-center"
+          >
+            <img
+              src={product.thumbnail}
+              alt={product.title}
+              className="h-12 w-12 object-cover rounded-md mr-4"
+            />
+            <p className="text-lg font-semibold">{product.title}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
+
+
+    </div>
             </div>
 
             {/* Right Section: Profile, Cart Icons, and Hamburger Menu */}
@@ -229,41 +306,45 @@ function Navbar() {
                   {/* Dropdown Menu */}
                   {dropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2">
-  {user ? null : (
-    <a
-      href="#"
-      className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-      onClick={openLoginPopup}
-    >
-      Login
-    </a>
-  )}
-<a
-  onClick={() => setDropdownOpen(false)}
-  className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
->
-  <Link to="/profile">
-    Profile
-  </Link>
-</a>
-
-  <a
-    href="#"
-    className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-  >
-    Settings
-  </a>
-  {user && (
-    <a
-      href="#"
-      className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-      onClick={handleLogout}
-    >
-      Logout
-    </a>
-  )}
-</div>
-
+                      {user ? null : (
+                        <a
+                          href="#"
+                          className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+                          onClick={openLoginPopup}
+                        >
+                          Login
+                        </a>
+                      )}
+                      <a
+                        onClick={() => setDropdownOpen(false)}
+                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+                      >
+                        <Link to="/profile">Profile</Link>
+                      </a>
+                      {user == null ? null : (
+                        <Link to="/orders">
+                          
+                          <a className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
+                            My Orders
+                          </a>
+                        </Link>
+                      )}
+                      <a
+                        href="#"
+                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+                      >
+                        Settings
+                      </a>
+                      {user && (
+                        <a
+                          href="#"
+                          className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
+                          onClick={handleLogout}
+                        >
+                          Logout
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -348,26 +429,22 @@ function Navbar() {
                           Login
                         </a>
                       )}
-                       {user == null ? null : (
-                        <Link to="/profile">                     <a
-                        
-                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-                      >
-                        Profile
-                      </a>
-                      </Link>
- 
-                       )}
-                          {user == null ? null : (
-                        <Link to="/orders">                     <a
-                        
-                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
-                      >
-                        My Orders
-                      </a>
-                      </Link>
- 
-                       )}
+                      {user == null ? null : (
+                        <Link to="/profile">
+                          
+                          <a className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
+                            Profile
+                          </a>
+                        </Link>
+                      )}
+                      {user == null ? null : (
+                        <Link to="/orders">
+                          
+                          <a className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
+                            My Orders
+                          </a>
+                        </Link>
+                      )}
                       <a
                         href="#"
                         className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
@@ -383,11 +460,8 @@ function Navbar() {
                         >
                           Logout
                         </a>
-                        
                       )}
-                      <a
-                      href="#"
-                      onClick={()=>setDropdownOpen(false)}>
+                      <a href="#" onClick={() => setDropdownOpen(false)}>
                         <center>❌</center>
                       </a>
                     </div>
@@ -414,94 +488,98 @@ function Navbar() {
           )}
 
           {/* Login Popup */}
-          {
-         loginPopupOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-              <h2 className="text-xl font-semibold mb-4">
-                {isLoginView ? "Login" : "Sign Up"}
-              </h2>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="email" className="block text-gray-600">
-                    Email:
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="w-full border rounded-md py-2 px-3"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="password" className="block text-gray-600">
-                    Password:
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    className="w-full border rounded-md py-2 px-3"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-    
-                {/* Confirm Password field for Sign-Up */}
-                {!isLoginView && (
+          {loginPopupOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+                <h2 className="text-xl font-semibold mb-4">
+                  {isLoginView ? "Login" : "Sign Up"}
+                </h2>
+                <form onSubmit={handleSubmit}>
                   <div className="mb-4">
-                    <label htmlFor="confirm-password" className="block text-gray-600">
-                      Confirm Password:
+                    <label htmlFor="email" className="block text-gray-600">
+                      Email:
                     </label>
                     <input
-                      type="password"
-                      id="confirm-password"
+                      type="email"
+                      id="email"
                       className="w-full border rounded-md py-2 px-3"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
-                )}
-    
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-                >
-                  {isLoginView ? "Login" : "Sign Up"}
-                </button>
-                <button
-                  type="button"
-                  className="text-gray-600 ml-4"
-                  onClick={closeLoginPopup}
-                >
-                  Cancel
-                </button>
-              </form>
-              <div className="mt-4">
-                <GoogleLogin
-                  onSuccess={handleGoogleLoginSuccess}
-                  onError={handleGoogleLoginFailure}
-                />
-              </div>
-              <div className="mt-4 text-center">
-                <button
-                  type="button"
-                  className="text-blue-500"
-                  onClick={toggleView}
-                >
-                  {isLoginView
-                    ? "Don't have an account? Sign Up"
-                    : "Already have an account? Login"}
-                </button>
+                  <div className="mb-4">
+                    <label htmlFor="password" className="block text-gray-600">
+                      Password:
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      className="w-full border rounded-md py-2 px-3"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* Confirm Password field for Sign-Up */}
+                  {!isLoginView && (
+                    <div className="mb-4">
+                      <label
+                        htmlFor="confirm-password"
+                        className="block text-gray-600"
+                      >
+                        Confirm Password:
+                      </label>
+                      <input
+                        type="password"
+                        id="confirm-password"
+                        className="w-full border rounded-md py-2 px-3"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                  >
+                    {isLoginView ? "Login" : "Sign Up"}
+                  </button>
+                  <button
+                    type="button"
+                    className="text-gray-600 ml-4"
+                    onClick={closeLoginPopup}
+                  >
+                    Cancel
+                  </button>
+                </form>
+                <div className="mt-4">
+                  <GoogleLogin
+                    onSuccess={handleGoogleLoginSuccess}
+                    onError={handleGoogleLoginFailure}
+                  />
+                </div>
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    className="text-blue-500"
+                    onClick={toggleView}
+                  >
+                    {isLoginView
+                      ? "Don't have an account? Sign Up"
+                      : "Already have an account? Login"}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
           )}
         </nav>
       </GoogleOAuthProvider>
+      {/* Display search results */}
+
     </>
   );
 }

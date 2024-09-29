@@ -43,8 +43,10 @@ const orderSchema = new Schema(
     // Tracking & delivery
     trackingNumber: { type: String },
     estimatedDeliveryDate: { type: Date },
-    
+    cancellationReason: { type: String }
+
   },
+
   { timestamps: true }
 );
 
