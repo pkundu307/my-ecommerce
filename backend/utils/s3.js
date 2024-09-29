@@ -4,8 +4,8 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 const s3 = new S3Client({
   region: 'a',
   credentials: {
-    accessKeyId: 'AKIA6D6JBV5POJQ7BHZP',
-    secretAccessKey: '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',
+    accessKeyId: '',
+    secretAccessKey: '',
   },
 });
 
@@ -22,7 +22,7 @@ export const uploadToS3 = async (fileContent, fileName) => {
   try {
     const command = new PutObjectCommand(params);
     await s3.send(command);
-    const url = `https://zauvijekimages.s3.ap-south-1.amazonaws.com/${fileName}`;
+    // const url = `https://zauvijekimages.s3.ap-south-1.amazonaws.com/${fileName}`;
     return url; // This will be the public URL
   } catch (error) {
     console.error('Error uploading to S3', error);

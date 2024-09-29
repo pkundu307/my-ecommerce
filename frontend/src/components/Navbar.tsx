@@ -40,7 +40,7 @@ function Navbar() {
   // Fetch results after debounce
   useEffect(() => {
     const fetchResults = async () => {
-      if (debouncedSearchTerm&&debouncedSearchTerm!="") {
+      if (debouncedSearchTerm) {
         try {
           const response = await axios.get<Product[]>(
             `http://localhost:5000/api/product/search?name=${debouncedSearchTerm}`
