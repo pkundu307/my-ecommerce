@@ -1,4 +1,4 @@
-import { useState,useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
 import profile from "../images/profile.jpg";
 import cart from "../images/cart.jpg";
@@ -22,10 +22,18 @@ interface Product {
 }
 
 function Navbar() {
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [results, setResults] = useState<Product[]>([]);
+  useEffect(() => {
+    // This will only run on initial render
+    if (debouncedSearchTerm === "") {
+      // Perform any actions you need when the string becomes empty
+      // For example, create an array or execute other logic
 
+      setResults([]);
+    }
+  }, [debouncedSearchTerm]);
   // Debounce effect
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -47,7 +55,7 @@ function Navbar() {
           );
           setResults(response.data);
         } catch (error) {
-          console.error('Error fetching search results', error);
+          console.error("Error fetching search results", error);
         }
       }
     };
@@ -191,7 +199,7 @@ function Navbar() {
       <GoogleOAuthProvider clientId="939883123761-up76q4mal36sd3quh558ssccr1cqc035.apps.googleusercontent.com">
         {/* <div className="max-w-screen-lg container mx-auto flex items-center justify-between bg-slate-400 p-5"> */}
         <nav
-          className="w-full container mx-auto flex items-center justify-between bg-slate-300 p-5"
+          className="w-full container mx-auto flex items-center justify-between bg-slate-300 p-1 "
           style={{ zIndex: 1, position: "sticky", top: 0 }}
         >
           <ToastContainer />
@@ -205,49 +213,54 @@ function Navbar() {
 
               {/* Search Bar */}
               <div className="p-4">
-{/* Search input and results */}
-<div className="relative">
-  <div className="flex items-center bg-gray-200 rounded-md">
-    <input
-      type="text"
-      placeholder="🔍 Search"
-      className="rounded-md px-2 py-1 bg-gray-200 focus:outline-none w-64"
-      value={searchTerm}
-      onChange={handleInputChange} // Handle search term change
-    />
-    <button className="bg-cyan-600 border-b-gray-800 rounded-md p-2">
-      <img
-        src={searchIcon}
-        alt="Search"
-        className="rounded-full h-8 w-8"
-      />
-    </button>
-  </div>
+                {/* Search input and results */}
+                <div className="relative">
+                  <div className="hidden sm:flex items-center bg-gray-200 rounded-md">
+                    <input
+                      type="text"
+                      placeholder="🔍 Search"
+                      className="rounded-md px-50 py-1 bg-gray-200 focus:outline-none w-full sm:w-64"
+                      value={searchTerm}
+                      onChange={handleInputChange}
+                    />
+                    <button className="bg-cyan-600 border-b-gray-800 rounded-md p-2">
+                      <img
+                        src={searchIcon}
+                        alt="Search"
+                        className="rounded-full h-8 w-8"
+                      />
+                    </button>
+                  </div>
 
-  {/* Search results - vertical list with z-index */}
-  {results.length > 0 && (
-    <div className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg z-50">
-      <ul className="flex flex-col divide-y divide-gray-200">
-        {results.map((product) => (
-          <li
-            key={product.id}
-            className="p-4 hover:bg-gray-100 flex items-center"
-          >
-            <img
-              src={product.thumbnail}
-              alt={product.title}
-              className="h-12 w-12 object-cover rounded-md mr-4"
-            />
-            <p className="text-lg font-semibold">{product.title}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )}
-</div>
-
-
-    </div>
+                  {/* Search results - vertical list with z-index */}
+                  {results.length > 0 && (
+                    <div className="hidden sm:block absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg z-50">
+                      <ul className="flex flex-col divide-y divide-gray-200">
+                        {results.map((product) => (
+                          <Link
+                            to={`product/${product.id}`}
+                            onClick={() => setResults([])}
+                          >
+                            <li
+                              key={product.id}
+                              className="p-4 hover:bg-gray-100 flex items-center"
+                            >
+                              <img
+                                src={product.thumbnail}
+                                alt={product.title}
+                                className="h-12 w-12 object-cover rounded-md mr-4"
+                              />
+                              <p className="text-lg font-semibold">
+                                {product.title}
+                              </p>
+                            </li>
+                          </Link>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Right Section: Profile, Cart Icons, and Hamburger Menu */}
@@ -323,7 +336,6 @@ function Navbar() {
                       </a>
                       {user == null ? null : (
                         <Link to="/orders">
-                          
                           <a className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
                             My Orders
                           </a>
@@ -376,8 +388,36 @@ function Navbar() {
                   <input
                     type="text"
                     placeholder="🔍 Search"
-                    className="rounded-md px-2 py-1 bg-gray-200 focus:outline-none w-full"
+                    value={searchTerm}
+                    onChange={handleInputChange}
+                    className="rounded-md px-6 py-1 bg-gray-200 focus:outline-none w-full"
                   />
+                  {results.length > 0 && (
+                    <div className=" absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg z-50">
+                      <ul className="flex flex-col divide-y divide-gray-200">
+                        {results.map((product) => (
+                          <Link
+                            to={`product/${product.id}`}
+                            onClick={() => setResults([])}
+                          >
+                            <li
+                              key={product.id}
+                              className="p-4 hover:bg-gray-100 flex items-center"
+                            >
+                              <img
+                                src={product.thumbnail}
+                                alt={product.title}
+                                className="h-12 w-12 object-cover rounded-md mr-4"
+                              />
+                              <p className="text-lg font-semibold">
+                                {product.title}
+                              </p>
+                            </li>
+                          </Link>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <button className="bg-cyan-600 border-b-gray-800 rounded-md p-2">
                     <img
                       src={searchIcon}
@@ -431,7 +471,6 @@ function Navbar() {
                       )}
                       {user == null ? null : (
                         <Link to="/profile">
-                          
                           <a className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
                             Profile
                           </a>
@@ -439,7 +478,6 @@ function Navbar() {
                       )}
                       {user == null ? null : (
                         <Link to="/orders">
-                          
                           <a className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
                             My Orders
                           </a>
@@ -579,7 +617,6 @@ function Navbar() {
         </nav>
       </GoogleOAuthProvider>
       {/* Display search results */}
-
     </>
   );
 }
