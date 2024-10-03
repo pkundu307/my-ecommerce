@@ -15,6 +15,17 @@ interface Widget {
 
 const widgets: Widget[] = [
   {
+    title: "banner carousel",
+    description: "View total sales this month.",
+    color: "#c4db7d",
+    gradient: ["#c4db7d", "#008080"], 
+    icon: "shopping-cart",
+    stat: "$15,300", 
+    to: "/carouselset",
+    linkText: "View Sales",
+    isActive: true,
+  },
+  {
     title: "Total Sales",
     description: "View total sales this month.",
     color: "#00FFFF",

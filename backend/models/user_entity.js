@@ -22,6 +22,11 @@ const userSchema = new Schema({
         type: String,
         enum: ["self", "google"],
         default: "self"
+    },
+    role: {
+        type: String,
+        enum: ["admin", "user","superadmin"],
+        default: "user"
     }
 });
 

@@ -1,14 +1,14 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
-import profile from "../images/profile.jpg";
-import cart from "../images/cart.jpg";
-import adminDashboard from "../images/admindashboard.jpg";
+import profile from "../../images/profile.jpg";
+import cart from "../../images/cart.jpg";
+import adminDashboard from "../../images/admindashboard.jpg";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { Link } from "react-router-dom";
-import searchIcon from "../images/search.png";
+import searchIcon from "../../images/search.png";
 import { useDispatch, useSelector } from "react-redux";
-import { clearUser, setUser } from "../app/userSlice";
-import { RootState } from "../app/types";
+import { clearUser, setUser } from "../../app/userSlice";
+import { RootState } from "../../app/types";
 import { ToastContainer, toast } from "react-toastify"; // Import react-toastify
 import "react-toastify/dist/ReactToastify.css";
 interface GoogleOAuthResponse {
